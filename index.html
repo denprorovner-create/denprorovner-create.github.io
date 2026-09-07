@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>3D Layer Snake</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #050510;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+
+        #canvas-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 10;
+            pointer-events: none; /* Let clicks pass through to 3D canvas */
+        }
+
+        .hud-top {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
+
+        h1 { margin: 0; font-size: 24px; color: #4ade80; text-transform: uppercase; letter-spacing: 2px;}
+        h2 { margin: 5px 0 0 0; font-size: 20px; font-weight: normal; }
+        .instructions { color: #aaa; font-size: 14px; margin-top: 10px; line-height: 1.5;}
+
+        /* Slider Controls */
+        #controls-bottom {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 20, 30, 0.85);
+            padding: 20px 40px;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            pointer-events: auto; /* Enable interaction for slider */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .slider-label {
+            font-size: 14px;
+            font-weight: bold;
+            color: #60a5fa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        /* Custom Range Slider */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 300px;
+            background: transparent;
+        }
+
+        input[type=range]:focus { outline: none; }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 12px;
+            cursor: pointer;
+            background: #1e293b;
+            border-radius: 6px;
+            border: 1px solid #334155;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            height: 24px;
+            width: 36px;
+            border-radius: 12px;
+            background: #60a5fa;
+            cursor: pointer;
+            -webkit-appearance: none;
+            margin-top: -7px;
+            box-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        input[type=range]::-webkit-slider-thumb:hover { background: #93c5fd; transform: scale(1.1); }
+        input[type=range]::-webkit-slider-thumb:active { background: #3b82f6; }
+
+        /* Game Over Modal */
+        #game-over-modal {
+            display: none; /* Hidden by default */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(10, 15, 25, 0.95);
+            padding: 40px 60px;
+            border-radius: 20px;
+            text-align: center;
+            border: 2px solid #ef4444;
+            pointer-events: auto;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        #game-over-modal h2 { color: #ef4444; font-size: 36px; margin: 0 0 10px 0; font-weight: bold; text-transform: uppercase;}
+        #game-over-modal p { font-size: 24px; margin: 0 0 30px 0; }
+
+        button {
+            padding: 12px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            background: #ef4444;
+            border: none;
+            color: white;
+            border-radius: 8px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover { background: #f87171; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4); }
+        button:active { transform: translateY(0); }
+
+        .layer-marks {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            padding: 0 10px;
+            box-sizing: border-box;
+            color: #64748b;
+            font-size: 12px;
+            margin-top: -5px;
+        }
+
+    </style>
+    <!-- Import Three.js and OrbitControls -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+    <div id="canvas-container"></div>
+
+    <div id="ui-layer">
+        <div class="hud-top">
+            <h1>Dimension Snake</h1>
+            <h2>Score: <span id="score-display">0</span></h2>
+            <div class="instructions">
+                <b>WASD / Arrows</b> to move in 2D.<br>
+                <b>Slider</b> to jump between 3D layers.<br>
+                <b>Drag</b> mouse to rotate camera.
+            </div>
+        </div>
+
+        <div id="controls-bottom">
+            <div class="slider-label">
+                <span>Layer 0 (Bottom)</span>
+                <span id="current-layer-text">Layer: 4</span>
+                <span>Layer 9 (Top)</span>
+            </div>
+            <input type="range" id="layer-slider" min="0" max="9" value="4" step="1">
+            <div class="layer-marks">
+                <span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span>
+            </div>
+        </div>
+
+        <div id="game-over-modal">
+            <h2>Game Over</h2>
+            <p>Final Score: <span id="final-score">0</span></p>
+            <button id="restart-btn">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Game Configuration & State ---
+        const CONFIG = {
+            gridSize: 15,       // 15x15 grid on each layer
+            layers: 10,         // 10 vertical layers (0 to 9)
+            layerSpacing: 2,    // Physical distance between layers in 3D space
+            tickRate: 180,      // Game speed: milliseconds per move
+        };
+
+        let state = {
+            isRunning: false,
+            score: 0,
+            logicalLayer: 4,    // The layer (Z-axis) the snake is logically on
+            visualLayer: 4,     // Smoothed value for rendering transitions
+            snake: [],          // Array of {x, y} coordinates
+            dir: { x: 1, y: 0 },
+            nextDir: { x: 1, y: 0 },
+            food: { x: 0, y: 0, z: 0 },
+            lastTickTime: 0,
+        };
+
+        // --- Three.js Setup ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x050510, 0.02);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        // Position camera to look down diagonally at the volume
+        camera.position.set(20, 25, 30);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.maxDistance = 60;
+        controls.minDistance = 10;
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+        scene.add(ambientLight);
+        
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(10, 20, 10);
+        scene.add(dirLight);
+
+        // --- 3D Objects & Materials ---
+        
+        // Materials
+        const matSnakeHead = new THREE.MeshStandardMaterial({ color: 0x4ade80, roughness: 0.2, metalness: 0.1 });
+        const matSnakeBody = new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.5 });
+        const matFood = new THREE.MeshStandardMaterial({ 
+            color: 0xef4444, 
+            emissive: 0xef4444, 
+            emissiveIntensity: 0.5,
+            roughness: 0.2
+        });
+        const matActiveLayer = new THREE.MeshBasicMaterial({ 
+            color: 0x3b82f6, 
+            transparent: true, 
+            opacity: 0.15, 
+            side: THREE.DoubleSide,
+            depthWrite: false
+        });
+
+        // Geometries
+        const geoCube = new THREE.BoxGeometry(0.9, 0.9, 0.9);
+        const geoSphere = new THREE.SphereGeometry(0.5, 16, 16);
+        const geoPlane = new THREE.PlaneGeometry(CONFIG.gridSize, CONFIG.gridSize);
+
+        // Scene Groups & Objects
+        const gameGroup = new THREE.Group(); // Holds everything
+        scene.add(gameGroup);
+
+        let snakeMeshes = [];
+        
+        // The glowing food object
+        const foodMesh = new THREE.Mesh(geoSphere, matFood);
+        gameGroup.add(foodMesh);
+
+        // A line dropping from food down to the bottom to help spatial awareness
+        const foodGuideGeo = new THREE.CylinderGeometry(0.05, 0.05, CONFIG.layers * CONFIG.layerSpacing, 8);
+        const foodGuideMat = new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.3 });
+        const foodGuideMesh = new THREE.Mesh(foodGuideGeo, foodGuideMat);
+        gameGroup.add(foodGuideMesh);
+
+        // The visual representation of the current 2D plane
+        const activeLayerPlane = new THREE.Mesh(geoPlane, matActiveLayer);
+        activeLayerPlane.rotation.x = -Math.PI / 2; // Lay flat
+        
+        // Grid on the active plane
+        const activeGrid = new THREE.GridHelper(CONFIG.gridSize, CONFIG.gridSize, 0x60a5fa, 0x1e3a8a);
+        activeGrid.material.transparent = true;
+        activeGrid.material.opacity = 0.5;
+        
+        const activeLayerGroup = new THREE.Group();
+        activeLayerGroup.add(activeLayerPlane);
+        activeLayerGroup.add(activeGrid);
+        gameGroup.add(activeLayerGroup);
+
+        // Outer Bounding Box (Wireframe)
+        const boxGeo = new THREE.BoxGeometry(CONFIG.gridSize, (CONFIG.layers - 1) * CONFIG.layerSpacing, CONFIG.gridSize);
+        const edges = new THREE.EdgesGeometry(boxGeo);
+        const boundMaterial = new THREE.LineBasicMaterial({ color: 0x334155, transparent: true, opacity: 0.5 });
+        const boundingBox = new THREE.LineSegments(edges, boundMaterial);
+        // Center the bounding box vertically based on layer spacing
+        boundingBox.position.y = ((CONFIG.layers - 1) * CONFIG.layerSpacing) / 2;
+        gameGroup.add(boundingBox);
+
+        // Helper: Convert Logical Game Coordinates (x, y, layer) to 3D Space Coordinates
+        function getPos3D(lx, ly, lz) {
+            return {
+                x: lx - (CONFIG.gridSize / 2) + 0.5,
+                y: lz * CONFIG.layerSpacing,       // Z in game logic is Y in 3D world (height)
+                z: ly - (CONFIG.gridSize / 2) + 0.5  // Y in game logic is Z in 3D world (depth)
+            };
+        }
+
+        // --- Core Game Logic ---
+
+        function initGame() {
+            // Initial Snake: Length 3 in middle of grid
+            const startX = Math.floor(CONFIG.gridSize / 2);
+            const startY = Math.floor(CONFIG.gridSize / 2);
+            state.snake = [
+                { x: startX, y: startY },
+                { x: startX - 1, y: startY },
+                { x: startX - 2, y: startY }
+            ];
+            
+            state.dir = { x: 1, y: 0 };
+            state.nextDir = { x: 1, y: 0 };
+            state.logicalLayer = 4;
+            state.visualLayer = 4;
+            state.score = 0;
+            state.isRunning = true;
+            
+            // Reset UI
+            document.getElementById('layer-slider').value = state.logicalLayer;
+            updateScoreUI();
+            document.getElementById('game-over-modal').style.display = 'none';
+
+            // Clean up old meshes
+            snakeMeshes.forEach(m => gameGroup.remove(m));
+            snakeMeshes = [];
+
+            // Create initial meshes
+            state.snake.forEach((seg, index) => {
+                const mesh = new THREE.Mesh(geoCube, index === 0 ? matSnakeHead : matSnakeBody);
+                gameGroup.add(mesh);
+                snakeMeshes.push(mesh);
+            });
+
+            spawnFood();
+            
+            // Re-center camera target to middle of bounding volume
+            controls.target.set(0, ((CONFIG.layers - 1) * CONFIG.layerSpacing) / 2, 0);
+        }
+
+        function spawnFood() {
+            let valid = false;
+            while (!valid) {
+                state.food.x = Math.floor(Math.random() * CONFIG.gridSize);
+                state.food.y = Math.floor(Math.random() * CONFIG.gridSize);
+                state.food.z = Math.floor(Math.random() * CONFIG.layers);
+                
+                // Ensure food doesn't spawn ON the snake if it happens to be on the same layer
+                valid = true;
+                if (state.food.z === state.logicalLayer) {
+                    for (let seg of state.snake) {
+                        if (seg.x === state.food.x && seg.y === state.food.y) {
+                            valid = false;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Update food 3D position
+            const pos = getPos3D(state.food.x, state.food.y, state.food.z);
+            foodMesh.position.set(pos.x, pos.y, pos.z);
+            
+            // Update guide line position
+            foodGuideMesh.position.set(
+                pos.x, 
+                ((CONFIG.layers - 1) * CONFIG.layerSpacing) / 2, // Center vertically
+                pos.z
+            );
+        }
+
+        function gameOver() {
+            state.isRunning = false;
+            document.getElementById('final-score').innerText = state.score;
+            document.getElementById('game-over-modal').style.display = 'block';
+        }
+
+        function gameTick() {
+            if (!state.isRunning) return;
+
+            state.dir = state.nextDir;
+            const head = state.snake[0];
+            const nextX = head.x + state.dir.x;
+            const nextY = head.y + state.dir.y;
+
+            // 1. Wall Collision (X/Y plane bounds)
+            if (nextX < 0 || nextX >= CONFIG.gridSize || nextY < 0 || nextY >= CONFIG.gridSize) {
+                gameOver();
+                return;
+            }
+
+            // 2. Self Collision
+            // Since whole snake is on one layer, we only check X/Y
+            for (let i = 0; i < state.snake.length; i++) {
+                if (state.snake[i].x === nextX && state.snake[i].y === nextY) {
+                    gameOver();
+                    return;
+                }
+            }
+
+            const newHead = { x: nextX, y: nextY };
+            state.snake.unshift(newHead); // Add new head
+
+            // 3. Food Collision
+            // Must match X, Y, AND the slider's Z layer
+            if (nextX === state.food.x && nextY === state.food.y && state.logicalLayer === state.food.z) {
+                // Ate food
+                state.score++;
+                updateScoreUI();
+                
+                // Add a new mesh for the body
+                const mesh = new THREE.Mesh(geoCube, matSnakeBody);
+                gameGroup.add(mesh);
+                snakeMeshes.push(mesh);
+                
+                // Briefly pulse food before moving it
+                matFood.emissiveIntensity = 2.0;
+                setTimeout(() => { matFood.emissiveIntensity = 0.5; }, 200);
+
+                spawnFood();
+            } else {
+                // Didn't eat, remove tail
+                state.snake.pop();
+            }
+        }
+
+        function updateScoreUI() {
+            document.getElementById('score-display').innerText = state.score;
+        }
+
+        // --- Render Loop & Animation ---
+        
+        // Use requestAnimationFrame for smooth visuals, but control logic speed with delta time
+        function animate(time) {
+            requestAnimationFrame(animate);
+
+            if (state.isRunning) {
+                if (time - state.lastTickTime > CONFIG.tickRate) {
+                    gameTick();
+                    state.lastTickTime = time;
+                }
+            }
+
+            // Smooth interpolation for the layer slider movement
+            state.visualLayer += (state.logicalLayer - state.visualLayer) * 0.15;
+            const currentYHeight = state.visualLayer * CONFIG.layerSpacing;
+
+            // Update Active Layer Plane visual position
+            activeLayerGroup.position.y = currentYHeight;
+
+            // Update Snake Meshes positions
+            // Snake exists entirely on the active visual layer
+            for (let i = 0; i < state.snake.length; i++) {
+                const seg = state.snake[i];
+                const pos = getPos3D(seg.x, seg.y, state.visualLayer);
+                
+                const mesh = snakeMeshes[i];
+                if(mesh) {
+                    mesh.position.set(pos.x, pos.y, pos.z);
+                    // Add slight sine wave breathing animation to the snake
+                    mesh.scale.setScalar(0.9 + Math.sin(time * 0.005 - i * 0.5) * 0.05);
+                }
+            }
+
+            // Slowly rotate food
+            foodMesh.rotation.y += 0.02;
+            foodMesh.rotation.x += 0.01;
+            // Hover animation for food
+            foodMesh.position.y = getPos3D(0,0,state.food.z).y + Math.sin(time * 0.005) * 0.15;
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // --- Input Handling ---
+
+        window.addEventListener('keydown', (e) => {
+            if (!state.isRunning) return;
+            
+            // Prevent default scrolling for arrows
+            if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," "].indexOf(e.code) > -1) {
+                e.preventDefault();
+            }
+
+            switch(e.key) {
+                // In game logic: y decreases going "up" screen, increases going "down" screen
+                case 'ArrowUp':
+                case 'w': case 'W':
+                    if (state.dir.y !== 1) state.nextDir = { x: 0, y: -1 }; break;
+                case 'ArrowDown':
+                case 's': case 'S':
+                    if (state.dir.y !== -1) state.nextDir = { x: 0, y: 1 }; break;
+                case 'ArrowLeft':
+                case 'a': case 'A':
+                    if (state.dir.x !== 1) state.nextDir = { x: -1, y: 0 }; break;
+                case 'ArrowRight':
+                case 'd': case 'D':
+                    if (state.dir.x !== -1) state.nextDir = { x: 1, y: 0 }; break;
+            }
+        });
+
+        // Slider Input
+        const slider = document.getElementById('layer-slider');
+        const layerText = document.getElementById('current-layer-text');
+        
+        slider.addEventListener('input', (e) => {
+            state.logicalLayer = parseInt(e.target.value);
+            layerText.innerText = `Layer: ${state.logicalLayer}`;
+        });
+
+        // Prevent orbit controls when touching the slider area on mobile
+        document.getElementById('controls-bottom').addEventListener('mousedown', (e) => e.stopPropagation());
+        document.getElementById('controls-bottom').addEventListener('touchstart', (e) => e.stopPropagation());
+
+        // Buttons
+        document.getElementById('restart-btn').addEventListener('click', initGame);
+
+        // Resize handler
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Start
+        initGame();
+        requestAnimationFrame(animate);
+
+    </script>
+</body>
+</html>
