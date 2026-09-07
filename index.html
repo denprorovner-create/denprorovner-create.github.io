@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>3D Platformer Dimension Snake</title>
+    <title>3D Dimension Platformer</title>
     <style>
         body {
             margin: 0;
             overflow: hidden;
-            background-color: #38bdf8; /* Sky blue background */
+            background-color: #38bdf8;
             color: white;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             user-select: none;
@@ -36,19 +36,19 @@
         }
 
         h1 { margin: 0; font-size: 24px; color: #fde047; text-transform: uppercase; letter-spacing: 2px;}
-        h2 { margin: 5px 0 0 0; font-size: 20px; font-weight: bold; }
+        h2 { margin: 5px 0 0 0; font-size: 18px; font-weight: bold; }
         .instructions { 
             color: #fff; 
             font-size: 13px; 
             margin-top: 10px; 
             line-height: 1.5; 
-            background: rgba(15, 23, 42, 0.7); 
+            background: rgba(15, 23, 42, 0.75); 
             padding: 12px; 
             border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
         }
 
-        /* Bottom Controls */
+        /* Bottom Slice Controls */
         #controls-bottom {
             position: absolute;
             bottom: 25px;
@@ -62,7 +62,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.6);
             backdrop-filter: blur(8px);
         }
@@ -91,29 +91,29 @@
         }
         input[type=range]::-webkit-slider-thumb {
             height: 24px; width: 36px; border-radius: 12px;
-            background: #fde047; cursor: pointer; -webkit-appearance: none; margin-top: -7px;
-            box-shadow: 0 0 10px rgba(253, 224, 71, 0.5); transition: background 0.2s, transform 0.1s;
+            background: #4ade80; cursor: pointer; -webkit-appearance: none; margin-top: -7px;
+            box-shadow: 0 0 10px rgba(74, 222, 128, 0.5); transition: background 0.2s, transform 0.1s;
         }
-        input[type=range]::-webkit-slider-thumb:hover { background: #fef08a; transform: scale(1.1); }
+        input[type=range]::-webkit-slider-thumb:hover { background: #86efac; transform: scale(1.1); }
         
         .layer-marks {
             display: flex; justify-content: space-between; width: 100%;
             padding: 0 4px; box-sizing: border-box; color: #94a3b8; font-size: 11px;
         }
 
-        /* Interactive 3D Minimap Area */
+        /* Interactive 3D Viewport Corner Container */
         #minimap-interactive {
             position: absolute;
             bottom: 25px;
             right: 25px;
-            width: 220px;
-            height: 220px;
-            border: 3px solid rgba(255, 255, 255, 0.8);
+            width: 260px;
+            height: 260px;
+            border: 3px solid rgba(255, 255, 255, 0.85);
             border-radius: 12px;
             pointer-events: auto;
             cursor: grab;
             box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            background-color: #0f172a;
+            background-color: #020617;
             overflow: hidden;
         }
         #minimap-interactive:active { cursor: grabbing; }
@@ -125,8 +125,8 @@
             text-shadow: 0 1px 3px black;
             pointer-events: none;
             z-index: 12;
-            background: rgba(0,0,0,0.4);
-            padding: 2px 6px;
+            background: rgba(0,0,0,0.5);
+            padding: 3px 8px;
             border-radius: 4px;
         }
 
@@ -151,10 +151,10 @@
 
         button {
             padding: 12px 28px; font-size: 16px; font-weight: bold; cursor: pointer;
-            background: #ef4444; border: none; color: white; border-radius: 8px;
+            background: #4ade80; border: none; color: #020617; border-radius: 8px;
             text-transform: uppercase; transition: all 0.2s;
         }
-        button:hover { background: #f87171; transform: translateY(-2px); }
+        button:hover { background: #86efac; transform: translateY(-2px); }
 
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -166,25 +166,25 @@
 
     <div id="ui-layer">
         <div class="hud-top">
-            <h1>Platformer Dimension Snake</h1>
-            <h2>Apples: <span id="score-display">0</span></h2>
+            <h1>Dimension Frogger</h1>
+            <h2>Gems: <span id="score-display">0</span></h2>
             <div class="instructions">
-                <b>WASD / Arrows</b> to move in 2D Platformer plane.<br>
-                <em>(Moving is optional! You can stand still anytime)</em><br>
-                <b>Slider</b> to shift/rotate the X-Axis Slice Plane in 3D.<br>
-                <b>Drag 3D Box</b> (bottom-right) to rotate the 3D minimap.
+                <b>A / D or Left / Right Arrows</b> to walk.<br>
+                <b>W / Up / Space</b> to jump.<br>
+                <b>Slider</b> to slice through 3D terrain slices.<br>
+                <b>Drag 3D Box</b> (bottom-right) to orbit the 3D camera.
             </div>
         </div>
 
         <div id="controls-bottom">
             <div class="slider-label">
-                <span>X-Slice: 0</span>
-                <span id="current-layer-text">X Plane: 4</span>
-                <span>X-Slice: 8</span>
+                <span>Slice: 0</span>
+                <span id="current-layer-text">X Plane: 6</span>
+                <span>Slice: 13</span>
             </div>
-            <input type="range" id="layer-slider" min="0" max="8" value="4" step="1">
+            <input type="range" id="layer-slider" min="0" max="13" value="6" step="1">
             <div class="layer-marks">
-                <span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span>
+                <span>0</span><span>2</span><span>4</span><span>6</span><span>8</span><span>10</span><span>12</span><span>13</span>
             </div>
         </div>
 
@@ -193,231 +193,273 @@
         </div>
 
         <div id="game-over-modal">
-            <h2>Game Over</h2>
-            <p>Apples Collected: <span id="final-score">0</span></p>
-            <div id="death-reason">You crashed into solid obstacles!</div>
+            <h2>Fell Into Hazard!</h2>
+            <p>Gems Collected: <span id="final-score">0</span></p>
+            <div id="death-reason">You fell into lava/water!</div>
             <button id="restart-btn">Try Again</button>
         </div>
     </div>
 
     <script>
-        // --- Game Config ---
+        // --- Configuration & Constants ---
         const CONFIG = {
-            gridSize: 9,        // Strict 9x9x9 block world
-            tickRate: 220,      // Snake movement step delay (ms)
-            minimapSize: 220    // Corner map pixel resolution
+            gridSizeX: 14,     // 14 slices wide along X
+            gridSizeY: 14,     // Height
+            gridSizeZ: 14,     // Depth along Z
+            minimapSize: 260   // Resolution of corner 3D viewer
         };
-        const center = CONFIG.gridSize / 2 - 0.5; // Math center of 9x9x9 block world
+
+        const center = {
+            x: CONFIG.gridSizeX / 2 - 0.5,
+            y: CONFIG.gridSizeY / 2 - 0.5,
+            z: CONFIG.gridSizeZ / 2 - 0.5
+        };
 
         let state = {
             isRunning: false,
             score: 0,
-            sliceX: 4,          // Current vertical X slice (0 to 8)
-            visualSliceX: 4,    // Interpolated visual slice for smooth 3D indicator
-            snake: [],          // [{x, y, z}] array
-            dir: { y: 0, z: 0 },// Movement direction on 2D side plane (y, z)
-            apples: [],         // Array of active apple positions [{x, y, z}]
-            lastTickTime: 0,
+            sliceX: 6,           // Current active X slice index
+            visualSliceX: 6,     // Smoothed slice position for 3D viewer
+            
+            // Player Platformer State
+            player: {
+                x: 6,            // X plane index
+                y: 10,           // Y grid height
+                z: 7,            // Z position (horizontal movement in 2D side view)
+                vy: 0,           // Vertical velocity
+                vz: 0,           // Horizontal velocity along Z
+                isGrounded: false,
+                facingLeft: false
+            },
+            
+            keys: { left: false, right: false, jump: false },
+            gems: []
         };
 
-        // --- Data Structure for 9x9x9 Voxel World ---
-        // world[x][y][z] = { mesh, isObstacle, type }
-        const world = Array(CONFIG.gridSize).fill(null).map(() => 
-            Array(CONFIG.gridSize).fill(null).map(() => 
-                Array(CONFIG.gridSize).fill(null)
+        // --- Voxel World Grid ---
+        // world[x][y][z] = { type, isSolid, mesh }
+        const world = Array(CONFIG.gridSizeX).fill(null).map(() => 
+            Array(CONFIG.gridSizeY).fill(null).map(() => 
+                Array(CONFIG.gridSizeZ).fill(null)
             )
         );
-        const allWorldObjects = [];
+        const allWorldVoxels = [];
 
         // --- Three.js Setup ---
         const container = document.getElementById('main-canvas-container');
         const scene = new THREE.Scene();
 
-        // 1. 2D Main Camera (Side View Orthographic Camera looking along +X axis towards center)
+        // 1. 2D Main View Camera (Orthographic Side View looking down X axis)
         const camera2D = new THREE.OrthographicCamera();
-        // Look horizontally from side towards the current slice plane
-        camera2D.position.set(-20, center, center);
-        camera2D.lookAt(center, center, center);
-        camera2D.layers.set(1); // Camera 2D ONLY renders Layer 1
+        camera2D.layers.set(1); // Renders Layer 1 (2D objects)
 
-        // 2. 3D Minimap Camera (Perspective Camera viewing whole 9x9x9 block world)
+        // 2. 3D Minimap Camera (Perspective)
         const camera3D = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
-        camera3D.position.set(center + 14, center + 12, center + 16);
-        camera3D.lookAt(center, center, center);
-        camera3D.layers.set(2); // Camera 3D ONLY renders Layer 2
+        camera3D.position.set(center.x + 22, center.y + 18, center.z + 24);
+        camera3D.lookAt(center.x, center.y, center.z);
+        camera3D.layers.set(2); // Renders Layer 2 (3D world)
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.setScissorTest(true); 
         container.appendChild(renderer.domElement);
 
-        // OrbitControls attached strictly to minimap overlay container
+        // OrbitControls for the 3D Minimap Corner
         const minimapDiv = document.getElementById('minimap-interactive');
         const controls = new THREE.OrbitControls(camera3D, minimapDiv);
         controls.enableDamping = true;
         controls.dampingFactor = 0.08;
-        controls.target.set(center, center, center);
+        controls.target.set(center.x, center.y, center.z);
 
-        // Lights
+        // Lighting
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
-        ambientLight.layers.enable(1); 
-        ambientLight.layers.enable(2);
+        ambientLight.layers.enable(1); ambientLight.layers.enable(2);
         scene.add(ambientLight);
         
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.85);
-        dirLight.position.set(12, 20, 15);
-        dirLight.layers.enable(1); 
-        dirLight.layers.enable(2);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+        dirLight.position.set(15, 25, 20);
+        dirLight.layers.enable(1); dirLight.layers.enable(2);
         scene.add(dirLight);
 
-        // Materials & Geometries
-        const geoBox = new THREE.BoxGeometry(0.95, 0.95, 0.95);
-        const geoSnake = new THREE.BoxGeometry(0.85, 0.85, 0.85);
-        const geoApple = new THREE.SphereGeometry(0.35, 16, 16);
+        // --- Geometries & Materials ---
+        const geoBox = new THREE.BoxGeometry(0.98, 0.98, 0.98);
+        const geoGem = new THREE.OctahedronGeometry(0.35);
 
         const matGrass = new THREE.MeshStandardMaterial({ color: 0x4ade80, roughness: 0.8 });
-        const matDirt = new THREE.MeshStandardMaterial({ color: 0x854d0e, roughness: 0.9 });
-        const matTrunk = new THREE.MeshStandardMaterial({ color: 0x542605, roughness: 0.9 });
-        const matLeaves = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.6 });
-        const matCloud = new THREE.MeshStandardMaterial({ color: 0xf8fafc, transparent: true, opacity: 0.85 });
-        
-        const matSnakeHead = new THREE.MeshStandardMaterial({ color: 0xf97316, roughness: 0.3 });
-        const matSnakeBody = new THREE.MeshStandardMaterial({ color: 0xfde047, roughness: 0.4 });
-        const matApple = new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0x991b1b, emissiveIntensity: 0.4 });
-        
-        const matActiveSlicePlane = new THREE.MeshBasicMaterial({ 
-            color: 0x38bdf8, 
+        const matDirt = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.9 });
+        const matStone = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.7 });
+        const matLava = new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0xb91c1c, emissiveIntensity: 0.8 });
+        const matGem = new THREE.MeshStandardMaterial({ color: 0xfde047, emissive: 0xca8a04, emissiveIntensity: 0.6 });
+
+        // 3D Slicing Plane Outline indicator in the 3D view
+        const sliceOutlineGeo = new THREE.PlaneGeometry(CONFIG.gridSizeZ, CONFIG.gridSizeY);
+        const sliceOutlineMat = new THREE.MeshBasicMaterial({ 
+            color: 0xffffff, 
             transparent: true, 
             opacity: 0.35, 
-            side: THREE.DoubleSide, 
-            depthWrite: false 
+            side: THREE.DoubleSide,
+            depthWrite: false
         });
+        const sliceOutlineMesh = new THREE.Mesh(sliceOutlineGeo, sliceOutlineMat);
+        sliceOutlineMesh.rotation.y = Math.PI / 2;
+        sliceOutlineMesh.position.set(6, center.y, center.z);
+        sliceOutlineMesh.layers.set(2);
+        scene.add(sliceOutlineMesh);
 
-        // Slice Plane Indicator (Vertical X Plane for 3D View)
-        const slicePlaneGeo = new THREE.PlaneGeometry(CONFIG.gridSize, CONFIG.gridSize);
-        const slicePlaneMesh = new THREE.Mesh(slicePlaneGeo, matActiveSlicePlane);
-        slicePlaneMesh.rotation.y = Math.PI / 2; // Orient along vertical Y-Z plane
-        slicePlaneMesh.position.set(4, center, center);
-        slicePlaneMesh.layers.set(2);
-        scene.add(slicePlaneMesh);
-
-        // Bounding wireframe box for 9x9x9 world
-        const boundsGeo = new THREE.BoxGeometry(CONFIG.gridSize, CONFIG.gridSize, CONFIG.gridSize);
+        // Wireframe box for 3D world
+        const boundsGeo = new THREE.BoxGeometry(CONFIG.gridSizeX, CONFIG.gridSizeY, CONFIG.gridSizeZ);
         const edges = new THREE.EdgesGeometry(boundsGeo);
-        const lineMat = new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.4 });
+        const lineMat = new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.3 });
         const wireframeBox = new THREE.LineSegments(edges, lineMat);
-        wireframeBox.position.set(center, center, center);
+        wireframeBox.position.set(center.x, center.y, center.z);
         wireframeBox.layers.set(2);
         scene.add(wireframeBox);
 
-        let snakeMeshes = [];
-        let appleMeshes = [];
+        // --- Canvas Frog Character Sprite Generator ---
+        function createFrogTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64; canvas.height = 64;
+            const ctx = canvas.getContext('2d');
 
-        // Helper: Add Voxel to World
-        function addVoxel(x, y, z, mat, isObstacle, type) {
-            if(x < 0 || x >= CONFIG.gridSize || y < 0 || y >= CONFIG.gridSize || z < 0 || z >= CONFIG.gridSize) return;
+            // Draw Cute Pixel Frog Character
+            ctx.fillStyle = '#4ade80';
+            ctx.fillRect(16, 20, 32, 32); // body
+
+            // Eyes
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(16, 12, 12, 12);
+            ctx.fillRect(36, 12, 12, 12);
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(20, 16, 6, 6);
+            ctx.fillRect(40, 16, 6, 6);
+
+            // Cheeks & Mouth
+            ctx.fillStyle = '#f43f5e';
+            ctx.fillRect(14, 32, 6, 4);
+            ctx.fillRect(44, 32, 6, 4);
+            ctx.fillStyle = '#15803d';
+            ctx.fillRect(24, 36, 16, 4);
+
+            // Legs
+            ctx.fillStyle = '#22c55e';
+            ctx.fillRect(8, 40, 10, 16);
+            ctx.fillRect(46, 40, 10, 16);
+
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        const frogTexture = createFrogTexture();
+        frogTexture.magFilter = THREE.NearestFilter;
+        frogTexture.minFilter = THREE.NearestFilter;
+
+        const frogMat = new THREE.SpriteMaterial({ map: frogTexture });
+        const playerSprite2D = new THREE.Sprite(frogMat);
+        playerSprite2D.scale.set(1.2, 1.2, 1);
+        playerSprite2D.layers.set(1); // 2D View
+        scene.add(playerSprite2D);
+
+        const playerSprite3D = new THREE.Sprite(frogMat);
+        playerSprite3D.scale.set(1.2, 1.2, 1);
+        playerSprite3D.layers.set(2); // 3D View
+        scene.add(playerSprite3D);
+
+        let gemMeshes = [];
+
+        // Helper: Add Voxel
+        function addVoxel(x, y, z, mat, isSolid, type) {
+            if(x < 0 || x >= CONFIG.gridSizeX || y < 0 || y >= CONFIG.gridSizeY || z < 0 || z >= CONFIG.gridSizeZ) return;
             
             const mesh = new THREE.Mesh(geoBox, mat);
             mesh.position.set(x, y, z);
-            mesh.layers.set(2); // Always visible in 3D minimap
+            mesh.layers.set(2); // In 3D map
             scene.add(mesh);
             
-            const obj = { mesh, x, y, z, isObstacle, type };
-            world[x][y][z] = obj;
-            allWorldObjects.push(obj);
+            const voxel = { mesh, x, y, z, isSolid, type };
+            world[x][y][z] = voxel;
+            allWorldVoxels.push(voxel);
         }
 
-        // --- Generate 9x9x9 World Sandbox ---
+        // --- Generate Terrain Matching Image (Hills, Stone Caves, Lava Bottom) ---
         function generateWorld() {
-            // Ground level (y = 0)
-            for (let x = 0; x < CONFIG.gridSize; x++) {
-                for (let z = 0; z < CONFIG.gridSize; z++) {
-                    addVoxel(x, 0, z, matGrass, true, 'ground');
-                }
-            }
+            for (let x = 0; x < CONFIG.gridSizeX; x++) {
+                for (let z = 0; z < CONFIG.gridSizeZ; z++) {
+                    // Lava floor at y = 0
+                    addVoxel(x, 0, z, matLava, false, 'lava');
 
-            // A couple trees scattered in 3D
-            const treePositions = [
-                {x: 2, z: 2}, {x: 6, z: 3}, {x: 2, z: 7}, {x: 7, z: 7}
-            ];
+                    // Base Stone caverns (y = 1 to 4)
+                    for (let y = 1; y <= 4; y++) {
+                        // Create cavern openings in the middle
+                        if (x >= 4 && x <= 9 && z >= 4 && z <= 9 && y >= 2) {
+                            // Cave air
+                            continue;
+                        }
+                        addVoxel(x, y, z, matStone, true, 'stone');
+                    }
 
-            treePositions.forEach(pos => {
-                // Trunk (y=1, y=2)
-                addVoxel(pos.x, 1, pos.z, matTrunk, true, 'tree_trunk');
-                addVoxel(pos.x, 2, pos.z, matTrunk, true, 'tree_trunk');
-
-                // Leaves Canopy (y=3, y=4)
-                for(let dx = -1; dx <= 1; dx++) {
-                    for(let dz = -1; dz <= 1; dz++) {
-                        addVoxel(pos.x + dx, 3, pos.z + dz, matLeaves, true, 'tree_leaves');
+                    // Hilly Terrain (y = 5 to 10)
+                    const heightOffset = Math.floor(Math.sin(x * 0.5) * 2 + Math.cos(z * 0.5) * 2) + 7;
+                    for (let y = 5; y <= heightOffset; y++) {
+                        if (y < CONFIG.gridSizeY) {
+                            if (y === heightOffset) {
+                                addVoxel(x, y, z, matGrass, true, 'grass');
+                            } else {
+                                addVoxel(x, y, z, matDirt, true, 'dirt');
+                            }
+                        }
                     }
                 }
-                addVoxel(pos.x, 4, pos.z, matLeaves, true, 'tree_leaves');
-            });
+            }
 
-            // Sky clouds (y=7, y=8)
-            addVoxel(1, 7, 1, matCloud, true, 'cloud');
-            addVoxel(2, 7, 1, matCloud, true, 'cloud');
-            addVoxel(5, 8, 4, matCloud, true, 'cloud');
-            addVoxel(6, 8, 4, matCloud, true, 'cloud');
-            addVoxel(7, 8, 5, matCloud, true, 'cloud');
+            // Scatter Gems
+            spawnGems();
         }
 
-        function isObstacle(x, y, z) {
-            if (x < 0 || x >= CONFIG.gridSize || y < 0 || y >= CONFIG.gridSize || z < 0 || z >= CONFIG.gridSize) {
-                return "boundary";
-            }
-            if (world[x][y][z] && world[x][y][z].isObstacle) {
-                return world[x][y][z].type;
-            }
-            return null;
-        }
+        function spawnGems() {
+            gemMeshes.forEach(m => scene.remove(m));
+            gemMeshes = [];
+            state.gems = [];
 
-        function spawnApples() {
-            // Clear existing apples
-            appleMeshes.forEach(m => scene.remove(m));
-            appleMeshes = [];
-            state.apples = [];
+            for (let i = 0; i < 8; i++) {
+                let gx = Math.floor(Math.random() * CONFIG.gridSizeX);
+                let gz = Math.floor(Math.random() * CONFIG.gridSizeZ);
+                // Find top solid ground
+                let gy = CONFIG.gridSizeY - 1;
+                while (gy > 1 && (!world[gx][gy - 1][gz] || !world[gx][gy - 1][gz].isSolid)) {
+                    gy--;
+                }
 
-            // Spawn 5 apples around the 9x9x9 world on open blocks
-            let targetCount = 5;
-            let attempts = 0;
-
-            while (state.apples.length < targetCount && attempts < 300) {
-                attempts++;
-                let ax = Math.floor(Math.random() * CONFIG.gridSize);
-                let ay = 1 + Math.floor(Math.random() * (CONFIG.gridSize - 2)); // y between 1 and 7
-                let az = Math.floor(Math.random() * CONFIG.gridSize);
-
-                if (isObstacle(ax, ay, az)) continue;
-
-                // Check duplicate
-                if (state.apples.some(a => a.x === ax && a.y === ay && a.z === az)) continue;
-
-                state.apples.push({ x: ax, y: ay, z: az });
-
-                const mesh = new THREE.Mesh(geoApple, matApple);
-                mesh.position.set(ax, ay, az);
+                state.gems.push({ x: gx, y: gy, z: gz });
+                const mesh = new THREE.Mesh(geoGem, matGem);
+                mesh.position.set(gx, gy + 0.2, gz);
                 mesh.layers.enable(1);
                 mesh.layers.enable(2);
                 scene.add(mesh);
-                appleMeshes.push(mesh);
+                gemMeshes.push(mesh);
             }
         }
 
-        function initGame() {
-            state.sliceX = 4;
-            state.visualSliceX = 4;
-            
-            // Start snake vertically floating on slice X=4
-            state.snake = [
-                { x: 4, y: 3, z: 4 },
-                { x: 4, y: 2, z: 4 },
-                { x: 4, y: 1, z: 4 }
-            ];
+        function getVoxel(x, y, z) {
+            const rx = Math.round(x);
+            const ry = Math.round(y);
+            const rz = Math.round(z);
+            if (rx < 0 || rx >= CONFIG.gridSizeX || ry < 0 || ry >= CONFIG.gridSizeY || rz < 0 || rz >= CONFIG.gridSizeZ) {
+                return null;
+            }
+            return world[rx][ry][rz];
+        }
 
-            state.dir = { y: 0, z: 0 }; // Movement is optional (still by default)
+        function initGame() {
+            state.sliceX = 6;
+            state.visualSliceX = 6;
+            
+            // Spawn frog on safe surface on slice 6
+            state.player.x = 6;
+            state.player.z = 7;
+            state.player.y = 10;
+            state.player.vy = 0;
+            state.player.vz = 0;
+            state.player.isGrounded = false;
             state.score = 0;
             state.isRunning = true;
 
@@ -425,114 +467,111 @@
             document.getElementById('current-layer-text').innerText = `X Plane: ${state.sliceX}`;
             document.getElementById('score-display').innerText = state.score;
             document.getElementById('game-over-modal').style.display = 'none';
-
-            // Reset snake meshes
-            snakeMeshes.forEach(m => scene.remove(m));
-            snakeMeshes = [];
-
-            state.snake.forEach((seg, index) => {
-                const mesh = new THREE.Mesh(geoSnake, index === 0 ? matSnakeHead : matSnakeBody);
-                mesh.layers.enable(1);
-                mesh.layers.enable(2);
-                scene.add(mesh);
-                snakeMeshes.push(mesh);
-            });
-
-            spawnApples();
         }
 
-        function gameOver(reasonText) {
+        function gameOver(reason) {
             state.isRunning = false;
             document.getElementById('final-score').innerText = state.score;
-            document.getElementById('death-reason').innerText = reasonText;
+            document.getElementById('death-reason').innerText = reason;
             document.getElementById('game-over-modal').style.display = 'block';
         }
 
-        function gameTick() {
+        // --- Platformer Physics Engine ---
+        function updatePhysics() {
             if (!state.isRunning) return;
 
-            // Moving is OPTIONAL: If dir is (0,0), the snake stays idle safely
-            if (state.dir.y === 0 && state.dir.z === 0) return;
+            const p = state.player;
+            p.x = state.sliceX; // Locked to current slice plane
 
-            const head = state.snake[0];
-            const nextX = state.sliceX;
-            const nextY = head.y + state.dir.y;
-            const nextZ = head.z + state.dir.z;
-
-            // Collision check
-            const hit = isObstacle(nextX, nextY, nextZ);
-            if (hit) {
-                let reason = "You crashed into a boundary!";
-                if (hit === 'ground') reason = "You hit the hard ground!";
-                if (hit === 'tree_trunk') reason = "You crashed into a tree trunk!";
-                if (hit === 'tree_leaves') reason = "You got tangled in tree leaves!";
-                if (hit === 'cloud') reason = "You bumped into a dense cloud!";
-                gameOver(reason);
-                return;
+            // Horizontal Movement (Z-axis in 3D world is Left/Right in 2D View)
+            if (state.keys.left) {
+                p.vz = -0.12;
+                p.facingLeft = true;
+            } else if (state.keys.right) {
+                p.vz = 0.12;
+                p.facingLeft = false;
+            } else {
+                p.vz *= 0.6; // Friction
             }
 
-            // Self-collision
-            for (let i = 0; i < state.snake.length; i++) {
-                if (state.snake[i].x === nextX && state.snake[i].y === nextY && state.snake[i].z === nextZ) {
-                    gameOver("You collided into yourself!");
+            // Jump
+            if (state.keys.jump && p.isGrounded) {
+                p.vy = 0.22;
+                p.isGrounded = false;
+            }
+
+            // Gravity
+            p.vy -= 0.012;
+
+            // Apply Horizontal Velocity & Collision
+            let nextZ = p.z + p.vz;
+            let vSide = getVoxel(p.x, p.y, nextZ);
+            if (vSide && vSide.isSolid) {
+                p.vz = 0;
+            } else {
+                p.z = Math.max(0, Math.min(CONFIG.gridSizeZ - 1, nextZ));
+            }
+
+            // Apply Vertical Velocity & Collision
+            let nextY = p.y + p.vy;
+            let vDown = getVoxel(p.x, nextY - 0.4, p.z);
+            let vUp = getVoxel(p.x, nextY + 0.4, p.z);
+
+            if (p.vy < 0 && vDown && vDown.isSolid) {
+                // Land on ground
+                p.y = Math.round(nextY - 0.4) + 0.9;
+                p.vy = 0;
+                p.isGrounded = true;
+            } else if (p.vy > 0 && vUp && vUp.isSolid) {
+                // Hit ceiling
+                p.vy = 0;
+            } else {
+                p.y = nextY;
+                p.isGrounded = false;
+            }
+
+            // Check Hazards (Lava at bottom or out of bounds)
+            if (p.y <= 0.5) {
+                let currentVoxel = getVoxel(p.x, p.y, p.z);
+                if (currentVoxel && currentVoxel.type === 'lava') {
+                    gameOver("You fell into the lava pit!");
                     return;
                 }
             }
 
-            const newHead = { x: nextX, y: nextY, z: nextZ };
-            state.snake.unshift(newHead);
-
-            // Check Apple Pickup
-            let eatenIndex = state.apples.findIndex(a => a.x === nextX && a.y === nextY && a.z === nextZ);
-            if (eatenIndex !== -1) {
-                state.score++;
-                document.getElementById('score-display').innerText = state.score;
-
-                // Remove eaten apple mesh
-                scene.remove(appleMeshes[eatenIndex]);
-                appleMeshes.splice(eatenIndex, 1);
-                state.apples.splice(eatenIndex, 1);
-
-                // Grow snake body
-                const newMesh = new THREE.Mesh(geoSnake, matSnakeBody);
-                newMesh.layers.enable(1);
-                newMesh.layers.enable(2);
-                scene.add(newMesh);
-                snakeMeshes.push(newMesh);
-
-                // Respawn single apple
-                let attempts = 0;
-                while (attempts < 100) {
-                    attempts++;
-                    let ax = Math.floor(Math.random() * CONFIG.gridSize);
-                    let ay = 1 + Math.floor(Math.random() * (CONFIG.gridSize - 2));
-                    let az = Math.floor(Math.random() * CONFIG.gridSize);
-
-                    if (isObstacle(ax, ay, az)) continue;
-                    if (state.apples.some(a => a.x === ax && a.y === ay && a.z === az)) continue;
-
-                    state.apples.push({ x: ax, y: ay, z: az });
-                    const m = new THREE.Mesh(geoApple, matApple);
-                    m.position.set(ax, ay, az);
-                    m.layers.enable(1);
-                    m.layers.enable(2);
-                    scene.add(m);
-                    appleMeshes.push(m);
-                    break;
-                }
-            } else {
-                state.snake.pop(); // Remove tail segment
+            if (p.y < -2) {
+                gameOver("You fell out of the world!");
+                return;
             }
+
+            // Gem Collection
+            state.gems.forEach((g, idx) => {
+                if (Math.abs(g.x - p.x) < 0.8 && Math.abs(g.y - p.y) < 0.8 && Math.abs(g.z - p.z) < 0.8) {
+                    state.score++;
+                    document.getElementById('score-display').innerText = state.score;
+                    scene.remove(gemMeshes[idx]);
+                    state.gems.splice(idx, 1);
+                    gemMeshes.splice(idx, 1);
+                }
+            });
+
+            // Update Sprites
+            playerSprite2D.position.set(p.x, p.y, p.z);
+            playerSprite3D.position.set(p.x, p.y, p.z);
+            
+            // Flip sprite depending on direction
+            playerSprite2D.scale.x = p.facingLeft ? -1.2 : 1.2;
+            playerSprite3D.scale.x = p.facingLeft ? -1.2 : 1.2;
         }
 
-        // --- Render Loop & Dual Camera Layout ---
+        // --- Render & Dual Viewport Logic ---
 
-        function updateCamera2D() {
+        function update2DCamera() {
             const w = window.innerWidth;
             const h = window.innerHeight;
             const aspect = w / h;
 
-            const frustumSize = CONFIG.gridSize + 2;
+            const frustumSize = CONFIG.gridSizeY + 2;
             if (aspect >= 1) {
                 camera2D.top = frustumSize / 2;
                 camera2D.bottom = -frustumSize / 2;
@@ -545,106 +584,84 @@
                 camera2D.right = frustumSize / 2;
             }
 
-            // Position 2D orthographic camera directly facing current X plane
-            camera2D.position.set(state.visualSliceX - 15, center, center);
-            camera2D.lookAt(state.visualSliceX, center, center);
+            // Camera looking straight down the X-axis at current 2D plane
+            camera2D.position.set(state.visualSliceX - 20, center.y, center.z);
+            camera2D.lookAt(state.visualSliceX, center.y, center.z);
             camera2D.updateProjectionMatrix();
         }
 
-        function animate(time) {
+        function animate() {
             requestAnimationFrame(animate);
 
-            if (state.isRunning) {
-                if (time - state.lastTickTime > CONFIG.tickRate) {
-                    gameTick();
-                    state.lastTickTime = time;
-                }
-            }
+            updatePhysics();
 
-            // Interpolate Plane Position for 3D View
+            // Smooth 3D plane outline movement
             state.visualSliceX += (state.sliceX - state.visualSliceX) * 0.2;
-            slicePlaneMesh.position.x = state.visualSliceX;
+            sliceOutlineMesh.position.x = state.visualSliceX;
 
-            updateCamera2D();
+            update2DCamera();
 
-            // Layer Visibility Updates for 2D View
-            allWorldObjects.forEach(obj => {
-                if (obj.x === state.sliceX) {
-                    obj.mesh.layers.enable(1);
+            // Slicing Logic: Voxels on active sliceX are rendered in 2D Camera Layer 1
+            allWorldVoxels.forEach(v => {
+                if (v.x === state.sliceX) {
+                    v.mesh.layers.enable(1);
                 } else {
-                    obj.mesh.layers.disable(1);
+                    v.mesh.layers.disable(1);
                 }
             });
 
-            // Update Apples
-            state.apples.forEach((a, idx) => {
-                if (a.x === state.sliceX) {
-                    appleMeshes[idx].layers.enable(1);
+            // Gems active on sliceX
+            state.gems.forEach((g, idx) => {
+                if (g.x === state.sliceX) {
+                    gemMeshes[idx].layers.enable(1);
                 } else {
-                    appleMeshes[idx].layers.disable(1);
+                    gemMeshes[idx].layers.disable(1);
                 }
-                appleMeshes[idx].rotation.y += 0.03;
+                gemMeshes[idx].rotation.y += 0.04;
             });
-
-            // Update Snake Meshes
-            for (let i = 0; i < state.snake.length; i++) {
-                const seg = state.snake[i];
-                if (snakeMeshes[i]) {
-                    snakeMeshes[i].position.set(seg.x, seg.y, seg.z);
-                }
-            }
 
             controls.update();
 
-            // --- Render Both Viewports ---
+            // --- Render Dual Viewports ---
             const w = window.innerWidth;
             const h = window.innerHeight;
 
-            // 1. Main 2D Horizontal Side Viewport
+            // 1. Main 2D Platformer Viewport
             renderer.setViewport(0, 0, w, h);
             renderer.setScissor(0, 0, w, h);
-            renderer.setClearColor(0x38bdf8); // Sky color
+            renderer.setClearColor(0x38bdf8); // Sky
             renderer.render(scene, camera2D);
 
-            // 2. Corner 3D Minimap Viewport
+            // 2. Corner 3D World Viewport
             const mSize = CONFIG.minimapSize;
             const mX = w - mSize - 25;
-            const mY = 25; // Screen Y from bottom in WebGL
+            const mY = 25; // Viewport Y offset from bottom
 
             renderer.setViewport(mX, mY, mSize, mSize);
             renderer.setScissor(mX, mY, mSize, mSize);
-            renderer.setClearColor(0x0f172a); // Dark contrast background
+            renderer.setClearColor(0x020617); // Dark slate background
             renderer.render(scene, camera3D);
         }
 
-        // --- Input Listeners ---
+        // --- Keyboard Controls ---
 
         window.addEventListener('keydown', (e) => {
-            if (!state.isRunning) return;
-
-            if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].indexOf(e.code) > -1) {
+            if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space", "KeyW", "KeyA", "KeyS", "KeyD"].indexOf(e.code) > -1) {
                 e.preventDefault();
             }
 
-            switch (e.key) {
-                case 'ArrowUp':
-                case 'w': case 'W':
-                    if (state.dir.y !== -1) state.dir = { y: 1, z: 0 }; break; // Up in 2D side plane (+Y)
-                case 'ArrowDown':
-                case 's': case 'S':
-                    if (state.dir.y !== 1) state.dir = { y: -1, z: 0 }; break; // Down in 2D side plane (-Y)
-                case 'ArrowLeft':
-                case 'a': case 'A':
-                    if (state.dir.z !== 1) state.dir = { y: 0, z: -1 }; break; // Left in 2D side plane (-Z)
-                case 'ArrowRight':
-                case 'd': case 'D':
-                    if (state.dir.z !== -1) state.dir = { y: 0, z: 1 }; break; // Right in 2D side plane (+Z)
-                case ' ':
-                    state.dir = { y: 0, z: 0 }; break; // Stop movement (Pause/Idle)
-            }
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') state.keys.left = true;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') state.keys.right = true;
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.code === 'Space') state.keys.jump = true;
         });
 
-        // X-Slice Plane Slider Controls
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') state.keys.left = false;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') state.keys.right = false;
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.code === 'Space') state.keys.jump = false;
+        });
+
+        // Slice Slider Input
         const slider = document.getElementById('layer-slider');
         const layerText = document.getElementById('current-layer-text');
 
@@ -652,33 +669,13 @@
             if (!state.isRunning) return;
 
             const newX = parseInt(e.target.value);
-
-            // Check if rotating/shifting slice materializes snake into obstacles
-            let hitObstacleType = null;
-            for (let seg of state.snake) {
-                const obstacle = isObstacle(newX, seg.y, seg.z);
-                if (obstacle) {
-                    hitObstacleType = obstacle;
-                    break;
-                }
-            }
-
-            if (hitObstacleType) {
-                state.sliceX = newX;
-                for (let seg of state.snake) seg.x = newX;
-                gameOver(`You rotated plane into a solid object (${hitObstacleType})!`);
-            } else {
-                state.sliceX = newX;
-                // Shift all snake segments to new X plane slice
-                for (let seg of state.snake) {
-                    seg.x = newX;
-                }
-            }
+            state.sliceX = newX;
+            state.player.x = newX;
 
             layerText.innerText = `X Plane: ${state.sliceX}`;
         });
 
-        // Prevent controls dragging from interfering with OrbitControls
+        // Interface Listeners
         document.getElementById('controls-bottom').addEventListener('mousedown', e => e.stopPropagation());
         document.getElementById('restart-btn').addEventListener('click', initGame);
 
@@ -686,7 +683,7 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
-        // Start
+        // Start Game
         generateWorld();
         initGame();
         requestAnimationFrame(animate);
