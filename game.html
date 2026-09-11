@@ -1,1 +1,510 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4-Dimensional Space Visualizer</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #050505; /* Deep, neutral black, not purple/blue tinted */
+            color: #d0d0d0;
+            font-family: 'Courier New', Courier, monospace; /* Strict monospace, technical feel */
+            font-size: 14px;
+        }
+
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 280px; /* Offset by UI panel width */
+            width: calc(100% - 280px);
+            height: 100vh;
+        }
+
+        #ui-panel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            background-color: #111111;
+            border-right: 1px solid #444444;
+            box-sizing: border-box;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .panel-section {
+            border-bottom: 1px solid #333333;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+
+        .panel-section:last-child {
+            border-bottom: none;
+        }
+
+        h1 {
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #ffffff;
+            margin: 0 0 15px 0;
+            border-bottom: 1px solid #ffffff;
+            padding-bottom: 5px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #aaaaaa;
+        }
+
+        .value-display {
+            float: right;
+            color: #00ffcc; /* High contrast technical color */
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+            margin-bottom: 10px;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 14px;
+            width: 14px;
+            background: #00ffcc;
+            cursor: pointer;
+            margin-top: -5px;
+            border-radius: 0; /* Square thumb for brutalist look */
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #444444;
+        }
+
+        button {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 8px;
+            background-color: #222222;
+            color: #ffffff;
+            border: 1px solid #555555;
+            font-family: inherit;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background-color 0.1s;
+        }
+
+        button:hover {
+            background-color: #444444;
+            border-color: #ffffff;
+        }
+
+        button:active {
+            background-color: #00ffcc;
+            color: #000000;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .checkbox-container input {
+            margin-right: 10px;
+        }
+
+        .sys-log {
+            font-size: 11px;
+            color: #666666;
+            margin-top: 20px;
+            word-wrap: break-word;
+        }
+
+    </style>
+    <!-- Loading Three.js and OrbitControls from CDNs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+    <div id="ui-panel">
+        <h1>4D Geometry Tool</h1>
+        
+        <div class="panel-section">
+            <label>
+                Observer W-Axis
+                <span id="w-val" class="value-display">0.00</span>
+            </label>
+            <input type="range" id="w-slider" min="-3" max="3" step="0.01" value="0">
+            <div class="sys-log">Translates objects through the 4th spatial dimension.</div>
+        </div>
+
+        <div class="panel-section">
+            <label>Entity Instantiation</label>
+            <button id="btn-spawn-4d">Deploy 4D Tesseract</button>
+            <button id="btn-spawn-3d">Deploy 3D Cube</button>
+            <button id="btn-clear">Clear Workspace</button>
+        </div>
+
+        <div class="panel-section">
+            <label>Global 4D Rotation Vectors</label>
+            <div class="checkbox-container">
+                <input type="checkbox" id="rot-xw" checked>
+                <label for="rot-xw">Plane XW</label>
+            </div>
+            <div class="checkbox-container">
+                <input type="checkbox" id="rot-yw" checked>
+                <label for="rot-yw">Plane YW</label>
+            </div>
+            <div class="checkbox-container">
+                <input type="checkbox" id="rot-zw">
+                <label for="rot-zw">Plane ZW</label>
+            </div>
+            <div class="checkbox-container">
+                <input type="checkbox" id="rot-xy">
+                <label for="rot-xy">Plane XY (Standard 3D)</label>
+            </div>
+            <div class="sys-log">Continuous rotation applied to 4D objects only.</div>
+        </div>
+
+        <div class="sys-log" id="status-log">
+            SYSTEM READY.<br>
+            Awaiting parameters...
+        </div>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <script>
+        // DOM Elements
+        const container = document.getElementById('canvas-container');
+        const wSlider = document.getElementById('w-slider');
+        const wValDisplay = document.getElementById('w-val');
+        const statusLog = document.getElementById('status-log');
+        
+        const rotXW = document.getElementById('rot-xw');
+        const rotYW = document.getElementById('rot-yw');
+        const rotZW = document.getElementById('rot-zw');
+        const rotXY = document.getElementById('rot-xy');
+
+        // Global Parameters
+        let globalWOffset = parseFloat(wSlider.value);
+        let entities = []; // Array to hold all interactive scene objects
+        const PROJECTION_DISTANCE = 2.5; // Distance of observer in 4D space
+
+        // Three.js Core Setup
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x050505);
+
+        // Add a faint grid to ground the 3D space
+        const gridHelper = new THREE.GridHelper(20, 20, 0x333333, 0x1a1a1a);
+        scene.add(gridHelper);
+
+        const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+        camera.position.set(4, 3, 5);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+
+        // OrbitControls for 3D mouse interaction
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+
+        // Resize handler
+        window.addEventListener('resize', () => {
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            renderer.setSize(width, height);
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+        });
+
+        // UI Event Listeners
+        wSlider.addEventListener('input', (e) => {
+            globalWOffset = parseFloat(e.target.value);
+            wValDisplay.innerText = globalWOffset.toFixed(2);
+        });
+
+        function logStatus(msg) {
+            statusLog.innerHTML = msg + "<br>" + statusLog.innerHTML.split('<br>').slice(0, 4).join('<br>');
+        }
+
+        
+        // 4D Point Class
+        class Point4D {
+            constructor(x, y, z, w) {
+                this.x = x;
+                this.y = y;
+                this.z = z;
+                this.w = w;
+            }
+        }
+
+        // Tesseract Base Geometry Data (16 vertices, 32 edges)
+        const tesseractVertices = [];
+        for (let i = 0; i < 16; i++) {
+            tesseractVertices.push(new Point4D(
+                (i & 1) ? 1 : -1,
+                (i & 2) ? 1 : -1,
+                (i & 4) ? 1 : -1,
+                (i & 8) ? 1 : -1
+            ));
+        }
+
+        const tesseractEdges = [];
+        for (let i = 0; i < 16; i++) {
+            for (let j = 0; j < 4; j++) {
+                let neighbor = i ^ (1 << j);
+                if (i < neighbor) {
+                    tesseractEdges.push([i, neighbor]);
+                }
+            }
+        }
+
+        // Matrix Rotation Utilities for 4D
+        function rotate4D(point, angle, plane) {
+            let cosA = Math.cos(angle);
+            let sinA = Math.sin(angle);
+            let x = point.x, y = point.y, z = point.z, w = point.w;
+            let res = new Point4D(x, y, z, w);
+
+            switch (plane) {
+                case 'XY':
+                    res.x = x * cosA - y * sinA;
+                    res.y = x * sinA + y * cosA;
+                    break;
+                case 'XZ':
+                    res.x = x * cosA - z * sinA;
+                    res.z = x * sinA + z * cosA;
+                    break;
+                case 'XW':
+                    res.x = x * cosA - w * sinA;
+                    res.w = x * sinA + w * cosA;
+                    break;
+                case 'YZ':
+                    res.y = y * cosA - z * sinA;
+                    res.z = y * sinA + z * cosA;
+                    break;
+                case 'YW':
+                    res.y = y * cosA - w * sinA;
+                    res.w = y * sinA + w * cosA;
+                    break;
+                case 'ZW':
+                    res.z = z * cosA - w * sinA;
+                    res.w = z * sinA + w * cosA;
+                    break;
+            }
+            return res;
+        }
+
+        // Project a 4D point to 3D space utilizing stereographic-like projection
+        function project4Dto3D(point4d, wOffset) {
+            // Translate the point's W coordinate based on the slider
+            let currentW = point4d.w + wOffset;
+            
+            // Calculate projection factor
+            // As point approaches PROJECTION_DISTANCE, it scales to infinity
+            let factor = 1;
+            let denominator = PROJECTION_DISTANCE - currentW;
+            
+            // Prevent division by zero and inversion if passing through camera
+            if (denominator > 0.001) {
+                factor = PROJECTION_DISTANCE / denominator;
+            } else if (denominator < -0.001) {
+                 factor = PROJECTION_DISTANCE / denominator;
+            } else {
+                factor = 1000; // Arbitrary large number to simulate passing through
+            }
+
+            return new THREE.Vector3(
+                point4d.x * factor,
+                point4d.y * factor,
+                point4d.z * factor
+            );
+        }
+
+        
+        // Base class for scene entities
+        class Entity {
+            constructor() {
+                this.position = new THREE.Vector3(
+                    (Math.random() - 0.5) * 4,
+                    (Math.random() - 0.5) * 4 + 2,
+                    (Math.random() - 0.5) * 4
+                );
+                this.mesh = null;
+            }
+            update() {}
+            destroy() {
+                if (this.mesh) {
+                    scene.remove(this.mesh);
+                    if (this.mesh.geometry) this.mesh.geometry.dispose();
+                    if (this.mesh.material) this.mesh.material.dispose();
+                }
+            }
+        }
+
+        // Standard 3D Cube (for reference/scale against 4D objects)
+        class Entity3D extends Entity {
+            constructor() {
+                super();
+                const geometry = new THREE.BoxGeometry(2, 2, 2);
+                const edges = new THREE.EdgesGeometry(geometry);
+                const material = new THREE.LineBasicMaterial({ color: 0x555555 }); // Dull gray for 3D
+                this.mesh = new THREE.LineSegments(edges, material);
+                this.mesh.position.copy(this.position);
+                scene.add(this.mesh);
+            }
+            update() {
+                // Subtle random drift for aesthetics
+                this.mesh.rotation.x += 0.005;
+                this.mesh.rotation.y += 0.005;
+            }
+        }
+
+        // Custom 4D Tesseract Object
+        class Entity4D extends Entity {
+            constructor() {
+                super();
+                
+                // Colors: Technical array, assigning random high-contrast color
+                const colors = [0x00ffcc, 0xffaa00, 0xff0055, 0x00aaff];
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                
+                // Initialize ThreeJS geometry for lines
+                this.geometry = new THREE.BufferGeometry();
+                
+                // 32 edges * 2 points per edge * 3 coords per point = 192 float32 array
+                this.positions = new Float32Array(32 * 2 * 3);
+                this.geometry.setAttribute('position', new THREE.BufferAttribute(this.positions, 3));
+                
+                this.material = new THREE.LineBasicMaterial({ 
+                    color: color, 
+                    transparent: true,
+                    opacity: 0.8
+                });
+                
+                this.mesh = new THREE.LineSegments(this.geometry, this.material);
+                scene.add(this.mesh);
+
+                // Internal 4D rotation state
+                this.angles = {
+                    xw: 0,
+                    yw: 0,
+                    zw: 0,
+                    xy: 0
+                };
+                
+                // Slight variance in rotation speed per instance
+                this.speedFactor = 0.5 + Math.random() * 1.5;
+            }
+
+            update() {
+                // Apply rotation increments if toggles are checked
+                if (rotXW.checked) this.angles.xw += 0.01 * this.speedFactor;
+                if (rotYW.checked) this.angles.yw += 0.012 * this.speedFactor;
+                if (rotZW.checked) this.angles.zw += 0.008 * this.speedFactor;
+                if (rotXY.checked) this.angles.xy += 0.015 * this.speedFactor;
+
+                let index = 0;
+
+                // Process edges and map to flat array
+                for (let i = 0; i < tesseractEdges.length; i++) {
+                    let p1_idx = tesseractEdges[i][0];
+                    let p2_idx = tesseractEdges[i][1];
+
+                    let p1 = tesseractVertices[p1_idx];
+                    let p2 = tesseractVertices[p2_idx];
+
+                    // Apply rotations
+                    p1 = rotate4D(p1, this.angles.xw, 'XW');
+                    p1 = rotate4D(p1, this.angles.yw, 'YW');
+                    p1 = rotate4D(p1, this.angles.zw, 'ZW');
+                    p1 = rotate4D(p1, this.angles.xy, 'XY');
+
+                    p2 = rotate4D(p2, this.angles.xw, 'XW');
+                    p2 = rotate4D(p2, this.angles.yw, 'YW');
+                    p2 = rotate4D(p2, this.angles.zw, 'ZW');
+                    p2 = rotate4D(p2, this.angles.xy, 'XY');
+
+                    // Project to 3D taking into account the global W slider offset
+                    let proj1 = project4Dto3D(p1, globalWOffset);
+                    let proj2 = project4Dto3D(p2, globalWOffset);
+
+                    // Add base world position offset
+                    proj1.add(this.position);
+                    proj2.add(this.position);
+
+                    // Update BufferGeometry positions
+                    this.positions[index++] = proj1.x;
+                    this.positions[index++] = proj1.y;
+                    this.positions[index++] = proj1.z;
+
+                    this.positions[index++] = proj2.x;
+                    this.positions[index++] = proj2.y;
+                    this.positions[index++] = proj2.z;
+                }
+
+                this.geometry.attributes.position.needsUpdate = true;
+            }
+        }
+
+
+        // Button events
+        document.getElementById('btn-spawn-4d').addEventListener('click', () => {
+            const ent = new Entity4D();
+            entities.push(ent);
+            logStatus(`SPAWNED: 4D Tesseract [ID:${Math.floor(Math.random()*1000)}]`);
+        });
+
+        document.getElementById('btn-spawn-3d').addEventListener('click', () => {
+            const ent = new Entity3D();
+            entities.push(ent);
+            logStatus(`SPAWNED: 3D Reference Cube [ID:${Math.floor(Math.random()*1000)}]`);
+        });
+
+        document.getElementById('btn-clear').addEventListener('click', () => {
+            entities.forEach(ent => ent.destroy());
+            entities = [];
+            logStatus("WORKSPACE CLEARED.");
+        });
+
+        // Initialize with one Tesseract
+        entities.push(new Entity4D());
+        logStatus("INITIALIZED: 4D Tesseract");
+
+        // Main render loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Update all entities
+            for (let i = 0; i < entities.length; i++) {
+                entities[i].update();
+            }
+
+            controls.update(); // required if controls.enableDamping or controls.autoRotate are set
+            renderer.render(scene, camera);
+        }
+
+        // Start loop
+        window.onload = function() {
+            animate();
+        };
+
+    </script>
+</body>
+</html>
