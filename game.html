@@ -3,15 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>4D Playground</title>
+    <title>4D Physics Sandbox</title>
     <style>
+        :root {
+            --bg-color: #0a0a0a;
+            --panel-bg: #141414;
+            --border-color: #333333;
+            --text-main: #e0e0e0;
+            --text-muted: #888888;
+            --accent: #ff5500;
+            --accent-hover: #ff7733;
+        }
+
         body {
             margin: 0;
             overflow: hidden;
-            background-color: #f5f2eb; /* Light beige/off-white background */
-            color: #333333;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            font-size: 14px;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Courier New', Courier, monospace; /* Utilitarian font */
+            font-size: 13px;
+            user-select: none;
         }
 
         #canvas-container {
@@ -23,917 +34,761 @@
             z-index: 1;
         }
 
-        #ui-panel {
+        /* Industrial UI Design */
+        #toolbar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: var(--panel-bg);
+            border-top: 1px solid var(--border-color);
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            box-sizing: border-box;
+            gap: 20px;
+        }
+
+        #side-panel {
             position: absolute;
             top: 20px;
-            right: 20px;
-            width: 320px;
-            background-color: rgba(255, 255, 255, 0.9);
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-            border: 1px solid rgba(0, 0, 0, 0.05);
-            box-sizing: border-box;
-            padding: 20px;
-            max-height: calc(100vh - 40px);
-            overflow-y: auto;
+            left: 20px;
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
             z-index: 10;
-            backdrop-filter: blur(10px);
+            padding: 15px;
+            width: 250px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
 
-        .panel-section {
-            border-bottom: 1px solid #eaeaea;
-            padding-bottom: 20px;
-            margin-bottom: 20px;
+        .panel-header {
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+            margin-bottom: 5px;
+            color: var(--accent);
         }
 
-        .panel-section:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-            padding-bottom: 0;
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
 
-        h1 {
-            font-size: 20px;
-            font-weight: 600;
-            color: #222;
-            margin: 0 0 20px 0;
-            letter-spacing: -0.5px;
+        .row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
         }
 
         label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #555;
-            font-size: 13px;
+            color: var(--text-muted);
+            white-space: nowrap;
         }
 
-        .value-display {
-            float: right;
-            color: #888;
-            font-weight: normal;
+        /* Technical Buttons */
+        button {
+            background-color: #222;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            font-family: inherit;
+            font-size: 12px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.1s linear;
+            flex: 1;
         }
 
+        button:hover {
+            background-color: #333;
+            border-color: var(--accent);
+        }
+
+        button:active {
+            background-color: var(--accent);
+            color: #000;
+        }
+        
+        button.danger:hover {
+            border-color: #ff3333;
+            color: #ff3333;
+        }
+        button.danger:active {
+            background-color: #ff3333;
+            color: #000;
+        }
+
+        /* Flat Slider */
         input[type=range] {
             -webkit-appearance: none;
             width: 100%;
             background: transparent;
-            margin-bottom: 15px;
+            height: 20px;
         }
 
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
             height: 16px;
-            width: 16px;
-            background: #fff;
-            border: 2px solid #6c5ce7;
-            border-radius: 50%;
-            cursor: pointer;
+            width: 8px;
+            background: var(--accent);
+            cursor: ew-resize;
             margin-top: -6px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
         input[type=range]::-webkit-slider-runnable-track {
             width: 100%;
             height: 4px;
             cursor: pointer;
-            background: #e0e0e0;
-            border-radius: 2px;
+            background: #444;
         }
 
-        .btn-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 10px;
+        input[type=range]:focus {
+            outline: none;
         }
 
-        button {
-            width: 100%;
-            padding: 10px 12px;
-            background-color: #f8f9fa;
-            color: #333;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-family: inherit;
-            font-weight: 500;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        .readout {
+            background: #000;
+            border: 1px solid #333;
+            padding: 4px 8px;
+            color: #0f0;
+            min-width: 40px;
+            text-align: right;
+            font-weight: bold;
         }
 
-        button:hover {
-            background-color: #fff;
-            border-color: #bbb;
-            box-shadow: 0 3px 8px rgba(0,0,0,0.05);
-            transform: translateY(-1px);
-        }
-
-        button:active {
-            background-color: #e9ecef;
-            transform: translateY(0);
+        #instructions {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(20, 20, 20, 0.8);
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            z-index: 10;
+            max-width: 280px;
+            line-height: 1.5;
+            color: var(--text-muted);
         }
         
-        .btn-primary {
-            background-color: #6c5ce7;
-            color: white;
-            border: none;
-        }
-        
-        .btn-primary:hover {
-            background-color: #5b4bc4;
-            border-color: transparent;
-        }
-        
-        .btn-danger {
-            background-color: #ff7675;
-            color: white;
-            border: none;
-        }
-        
-        .btn-danger:hover {
-            background-color: #d63031;
-            border-color: transparent;
-        }
+        .highlight { color: var(--text-main); font-weight: bold; }
 
-        .checkbox-container {
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 4px;
+            height: 4px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+            pointer-events: none;
         }
-
-        .checkbox-container input {
-            margin-right: 10px;
-            width: 16px;
-            height: 16px;
-            accent-color: #6c5ce7;
-        }
-        
-        .checkbox-container label {
-            margin-bottom: 0;
-            font-weight: normal;
-        }
-
-        .helper-text {
-            font-size: 12px;
-            color: #888;
-            margin-top: 5px;
-            line-height: 1.4;
-        }
-
     </style>
-    <!-- Loading Three.js, OrbitControls, and Cannon.js (Physics) -->
+    <!-- Three.js and Cannon.js (Physics) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
 </head>
 <body>
 
-    <div id="ui-panel">
-        <h1>4D Playground</h1>
+    <div id="side-panel">
+        <div class="panel-header">Spawn Entities</div>
         
-        <div class="panel-section">
-            <label>
-                Observer W-Axis
-                <span id="w-val" class="value-display">0.00</span>
-            </label>
-            <input type="range" id="w-slider" min="-3" max="3" step="0.01" value="0">
-            <div class="helper-text">Move observer through the 4th spatial dimension. Watch 4D objects morph.</div>
-        </div>
-
-        <div class="panel-section">
-            <label>Spawn 4D Objects</label>
-            <div class="btn-grid">
-                <button id="btn-spawn-tesseract" class="btn-primary">Tesseract</button>
-                <button id="btn-spawn-glome" class="btn-primary">Glome (4D Sphere)</button>
-            </div>
-            
-            <label style="margin-top: 15px;">Spawn 3D Objects</label>
-            <div class="btn-grid">
-                <button id="btn-spawn-cube">Cube</button>
-                <button id="btn-spawn-sphere">Sphere</button>
-                <button id="btn-spawn-cone">Cone</button>
-                <button id="btn-spawn-cylinder">Cylinder</button>
-                <button id="btn-spawn-torus">Torus</button>
-                <button id="btn-spawn-tetra">Tetrahedron</button>
-            </div>
-            <button id="btn-clear" class="btn-danger" style="margin-top: 10px;">Clear All</button>
-        </div>
-
-        <div class="panel-section">
-            <label>Auto-Rotation (4D Objects)</label>
-            <div class="checkbox-container">
-                <input type="checkbox" id="rot-xw" checked>
-                <label for="rot-xw">XW Plane (4D rotation)</label>
-            </div>
-            <div class="checkbox-container">
-                <input type="checkbox" id="rot-yw" checked>
-                <label for="rot-yw">YW Plane (4D rotation)</label>
-            </div>
-            <div class="checkbox-container">
-                <input type="checkbox" id="rot-zw">
-                <label for="rot-zw">ZW Plane (4D rotation)</label>
-            </div>
-            <div class="checkbox-container">
-                <input type="checkbox" id="rot-xy">
-                <label for="rot-xy">XY Plane (Standard 3D)</label>
-            </div>
-            <div class="helper-text" style="margin-top: 10px;">Drag objects to move them. They will fall with gravity.</div>
+        <div class="control-group">
+            <button id="btn-glome">Spawn Glome (4D Sphere)</button>
+            <button id="btn-hypercone">Spawn Hypercone</button>
+            <button id="btn-tesseract">Spawn Tesseract (4D Box)</button>
+            <button id="btn-spherinder">Spawn Spherinder</button>
+            <div style="height: 10px;"></div>
+            <button id="btn-clear" class="danger">Clear Scene</button>
         </div>
     </div>
 
+    <div id="toolbar">
+        <div class="row" style="flex: 1;">
+            <label for="w-slider">GLOBAL 3D SLICE (W-AXIS):</label>
+            <input type="range" id="w-slider" min="-10" max="10" step="0.01" value="0">
+            <div id="w-readout" class="readout">0.00</div>
+        </div>
+        <div class="row" style="width: auto;">
+            <label style="margin-right: 10px;">Gravity (W-Axis Focus):</label>
+            <button id="btn-wgrav" style="flex: 0; padding: 4px 8px; border-color: var(--accent); color: var(--accent);">ON</button>
+        </div>
+    </div>
+
+    <div id="instructions">
+        <div class="panel-header">Controls</div>
+        • <span class="highlight">Left Click + Drag:</span> Move objects in 3D space.<br>
+        • <span class="highlight">Scroll Wheel (Hover):</span> Push object along 4D W-axis.<br>
+        • <span class="highlight">Right Click + Drag:</span> Orbit camera.<br>
+        • <span class="highlight">Toss:</span> Fling objects to give them velocity.
+        <br><br>
+        <em>Note: You are seeing a 3D cross-section of 4D space. Objects grow, shrink, and vanish based on their intersection with our 3D slice.</em>
+    </div>
+
+    <div id="crosshair"></div>
     <div id="canvas-container"></div>
 
     <script>
+        // Global State & Simulation Parameters
+        let globalW = 0.0;
+        let wGravityEnabled = true;
+        const entities = [];
+        
+        // Interaction State
+        let draggedEntity = null;
+        let dragPlane = new THREE.Plane();
+        let dragOffset = new THREE.Vector3();
+        let mouseVelocity = new THREE.Vector3();
+        let lastMousePos = new THREE.Vector3();
+        let isHovering = false;
+        let hoveredEntity = null;
+
         // DOM Elements
         const container = document.getElementById('canvas-container');
         const wSlider = document.getElementById('w-slider');
-        const wValDisplay = document.getElementById('w-val');
-        
-        const rotXW = document.getElementById('rot-xw');
-        const rotYW = document.getElementById('rot-yw');
-        const rotZW = document.getElementById('rot-zw');
-        const rotXY = document.getElementById('rot-xy');
+        const wReadout = document.getElementById('w-readout');
 
-        // Global Parameters
-        let globalWOffset = parseFloat(wSlider.value);
-        let entities = []; // Holds all interactive scene objects { mesh, body, updateFn }
-        const PROJECTION_DISTANCE = 2.5; 
-        
-        // Interaction State
-        let isDragging = false;
-        let selectedEntity = null;
-        let dragPlane = new THREE.Plane();
-        let dragOffset = new THREE.Vector3();
-        let intersectionPoint = new THREE.Vector3();
-        
-        // Raycaster for mouse picking
-        const raycaster = new THREE.Raycaster();
-        const mouse = new THREE.Vector2();
+        // --- CORE ENGINES SETUP ---
 
-        // Three.js Core Setup
+        // 1. Three.js (Graphics)
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xf5f2eb); // Light beige background
-        scene.fog = new THREE.Fog(0xf5f2eb, 10, 50);
+        scene.background = new THREE.Color(0x0a0a0a);
+        scene.fog = new THREE.FogExp2(0x0a0a0a, 0.02);
 
-        // Camera setup
-        const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
-        camera.position.set(0, 10, 20);
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(12, 8, 12);
 
-        // Renderer setup
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setSize(container.clientWidth, container.clientHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         container.appendChild(renderer.domElement);
 
-        // OrbitControls
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
-        controls.maxPolarAngle = Math.PI / 2 - 0.05; // Don't go below ground
+        controls.maxPolarAngle = Math.PI / 2 + 0.1; // Allow slightly below ground
 
-        // Physics Core Setup (Cannon.js)
+        // 2. Cannon.js (Physics)
         const world = new CANNON.World();
-        world.gravity.set(0, -9.82, 0); // Earth gravity
+        world.gravity.set(0, -9.81, 0); // Standard Y gravity
         world.broadphase = new CANNON.NaiveBroadphase();
-        world.solver.iterations = 10;
-        
-        // Physics Material mapping
-        const defaultMaterial = new CANNON.Material();
-        const defaultContactMaterial = new CANNON.ContactMaterial(defaultMaterial, defaultMaterial, {
-            friction: 0.3,
-            restitution: 0.7 // Bounciness
-        });
-        world.addContactMaterial(defaultContactMaterial);
+        world.solver.iterations = 20; // High iterations for stability during shape morphing
 
-        // Lighting
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        const physicsMaterial = new CANNON.Material();
+        const contactMaterial = new CANNON.ContactMaterial(physicsMaterial, physicsMaterial, {
+            friction: 0.1,
+            restitution: 0.5 // Bouncy
+        });
+        world.addContactMaterial(contactMaterial);
+
+        // --- SCENE ENVIRONMENT ---
+
+        // Lighting (Harsh, studio style to read forms easily)
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
         scene.add(ambientLight);
 
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        dirLight.position.set(10, 20, 10);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+        dirLight.position.set(15, 25, 10);
         dirLight.castShadow = true;
         dirLight.shadow.mapSize.width = 2048;
         dirLight.shadow.mapSize.height = 2048;
         dirLight.shadow.camera.near = 0.5;
         dirLight.shadow.camera.far = 50;
-        dirLight.shadow.camera.left = -15;
-        dirLight.shadow.camera.right = 15;
-        dirLight.shadow.camera.top = 15;
-        dirLight.shadow.camera.bottom = -15;
+        dirLight.shadow.camera.left = -20;
+        dirLight.shadow.camera.right = 20;
+        dirLight.shadow.camera.top = 20;
+        dirLight.shadow.camera.bottom = -20;
         scene.add(dirLight);
-        
-        const fillLight = new THREE.DirectionalLight(0xebe2d5, 0.3);
-        fillLight.position.set(-10, 10, -10);
-        scene.add(fillLight);
 
-        // Ground Plane (Visual)
-        const groundGeo = new THREE.PlaneGeometry(100, 100);
-        const groundMat = new THREE.MeshStandardMaterial({ 
-            color: 0xe6e0d4,
-            roughness: 0.8,
-            metalness: 0.1
-        });
-        const groundMesh = new THREE.Mesh(groundGeo, groundMat);
-        groundMesh.rotation.x = -Math.PI / 2;
-        groundMesh.receiveShadow = true;
-        scene.add(groundMesh);
-        
-        // Grid helper for scale
-        const gridHelper = new THREE.GridHelper(40, 40, 0x000000, 0x000000);
-        gridHelper.material.opacity = 0.05;
-        gridHelper.material.transparent = true;
+        const rimLight = new THREE.DirectionalLight(0x4466ff, 0.5);
+        rimLight.position.set(-15, 5, -15);
+        scene.add(rimLight);
+
+        // The "3D Slice" Floor
+        // Note: The floor has infinite W-thickness, so it's always visible in our slice.
+        const gridHelper = new THREE.GridHelper(50, 50, 0x333333, 0x1a1a1a);
+        gridHelper.position.y = -0.01;
         scene.add(gridHelper);
 
-        // Ground Plane (Physics)
-        const groundBody = new CANNON.Body({
+        const floorGeo = new THREE.PlaneGeometry(50, 50);
+        const floorMat = new THREE.MeshStandardMaterial({ 
+            color: 0x050505, 
+            roughness: 0.8,
+            metalness: 0.2
+        });
+        const floorMesh = new THREE.Mesh(floorGeo, floorMat);
+        floorMesh.rotation.x = -Math.PI / 2;
+        floorMesh.receiveShadow = true;
+        scene.add(floorMesh);
+
+        const floorBody = new CANNON.Body({
             mass: 0, // static
             shape: new CANNON.Plane(),
-            material: defaultMaterial
+            material: physicsMaterial
         });
-        groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
-        world.addBody(groundBody);
+        floorBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+        world.addBody(floorBody);
 
-        // Resize handler
-        window.addEventListener('resize', () => {
-            const width = container.clientWidth;
-            const height = container.clientHeight;
-            renderer.setSize(width, height);
-            camera.aspect = width / height;
-            camera.updateProjectionMatrix();
-        });
-
-        // UI Event Listeners
-        wSlider.addEventListener('input', (e) => {
-            globalWOffset = parseFloat(e.target.value);
-            wValDisplay.innerText = globalWOffset.toFixed(2);
-        });
         
-        // Mouse/Touch interaction for dragging objects
-        function getIntersects(event) {
-            // Handle both mouse and touch
-            let clientX = event.clientX;
-            let clientY = event.clientY;
-            
-            if (event.changedTouches) {
-                clientX = event.changedTouches[0].clientX;
-                clientY = event.changedTouches[0].clientY;
-            }
-            
-            mouse.x = (clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(clientY / window.innerHeight) * 2 + 1;
-            
-            raycaster.setFromCamera(mouse, camera);
-            
-            // Only intersect with movable objects (not the ground)
-            const meshes = entities.map(e => e.mesh).filter(m => m !== undefined);
-            return raycaster.intersectObjects(meshes, true); // true for recursive (children)
-        }
-        
-        function onPointerDown(event) {
-            // Don't interfere with UI panel
-            if (event.target.closest('#ui-panel')) return;
-            
-            const intersects = getIntersects(event);
-            if (intersects.length > 0) {
-                // Find the parent mesh if we clicked a child
-                let object = intersects[0].object;
-                while (object.parent && object.parent !== scene) {
-                    object = object.parent;
-                }
-                
-                // Find matching entity
-                selectedEntity = entities.find(e => e.mesh === object);
-                
-                if (selectedEntity && selectedEntity.body) {
-                    isDragging = true;
-                    controls.enabled = false;
-                    
-                    // Set up plane for dragging parallel to camera view
-                    dragPlane.setFromNormalAndCoplanarPoint(
-                        camera.getWorldDirection(dragPlane.normal),
-                        selectedEntity.mesh.position
-                    );
-                    
-                    // Calculate offset
-                    raycaster.ray.intersectPlane(dragPlane, intersectionPoint);
-                    dragOffset.copy(intersectionPoint).sub(selectedEntity.mesh.position);
-                    
-                    // Wake up physics body
-                    selectedEntity.body.wakeUp();
-                    // Make it kinematic while dragging so physics doesn't fight us
-                    selectedEntity.body.type = CANNON.Body.KINEMATIC;
-                    // Reset velocities
-                    selectedEntity.body.velocity.set(0,0,0);
-                    selectedEntity.body.angularVelocity.set(0,0,0);
-                    
-                    // Visual feedback
-                    if (selectedEntity.mesh.material && selectedEntity.mesh.material.emissive) {
-                        selectedEntity.originalEmissive = selectedEntity.mesh.material.emissive.getHex();
-                        selectedEntity.mesh.material.emissive.setHex(0x333333);
-                    }
-                }
-            }
-        }
-        
-        function onPointerMove(event) {
-            if (!isDragging || !selectedEntity) return;
-            
-            let clientX = event.clientX;
-            let clientY = event.clientY;
-            
-            if (event.changedTouches) {
-                clientX = event.changedTouches[0].clientX;
-                clientY = event.changedTouches[0].clientY;
-            }
-            
-            mouse.x = (clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(clientY / window.innerHeight) * 2 + 1;
-            
-            raycaster.setFromCamera(mouse, camera);
-            
-            if (raycaster.ray.intersectPlane(dragPlane, intersectionPoint)) {
-                const newPos = intersectionPoint.sub(dragOffset);
-                // Keep above ground
-                newPos.y = Math.max(0.5, newPos.y); 
-                
-                // Update kinematic body position
-                selectedEntity.body.position.copy(newPos);
-            }
-        }
-        
-        function onPointerUp(event) {
-            if (isDragging && selectedEntity) {
-                isDragging = false;
-                controls.enabled = true;
-                
-                // Restore physical properties
-                selectedEntity.body.type = CANNON.Body.DYNAMIC;
-                
-                // Restore visual feedback
-                if (selectedEntity.mesh.material && selectedEntity.mesh.material.emissive && selectedEntity.originalEmissive !== undefined) {
-                    selectedEntity.mesh.material.emissive.setHex(selectedEntity.originalEmissive);
-                }
-                
-                selectedEntity = null;
-            }
-        }
-        
-        container.addEventListener('mousedown', onPointerDown);
-        container.addEventListener('mousemove', onPointerMove);
-        window.addEventListener('mouseup', onPointerUp);
-        
-        container.addEventListener('touchstart', onPointerDown, {passive: false});
-        container.addEventListener('touchmove', onPointerMove, {passive: false});
-        window.addEventListener('touchend', onPointerUp);
+        // Color Palette for generated objects
+        const colors = [0xff4500, 0x00ccff, 0x33ff55, 0xffcc00, 0xcc33ff, 0xffffff];
 
-        class Point4D {
-            constructor(x, y, z, w) {
-                this.x = x; this.y = y; this.z = z; this.w = w;
-            }
-        }
-
-        // Tesseract Base Geometry Data (16 vertices, 32 edges)
-        const tesseractVertices = [];
-        for (let i = 0; i < 16; i++) {
-            tesseractVertices.push(new Point4D(
-                (i & 1) ? 1 : -1,
-                (i & 2) ? 1 : -1,
-                (i & 4) ? 1 : -1,
-                (i & 8) ? 1 : -1
-            ));
-        }
-
-        const tesseractEdges = [];
-        for (let i = 0; i < 16; i++) {
-            for (let j = 0; j < 4; j++) {
-                let neighbor = i ^ (1 << j);
-                if (i < neighbor) {
-                    tesseractEdges.push([i, neighbor]);
-                }
-            }
-        }
-
-        // Matrix Rotation Utilities for 4D
-        function rotate4D(point, angle, plane) {
-            let cosA = Math.cos(angle);
-            let sinA = Math.sin(angle);
-            let x = point.x, y = point.y, z = point.z, w = point.w;
-            let res = new Point4D(x, y, z, w);
-
-            switch (plane) {
-                case 'XY': res.x = x * cosA - y * sinA; res.y = x * sinA + y * cosA; break;
-                case 'XZ': res.x = x * cosA - z * sinA; res.z = x * sinA + z * cosA; break;
-                case 'XW': res.x = x * cosA - w * sinA; res.w = x * sinA + w * cosA; break;
-                case 'YZ': res.y = y * cosA - z * sinA; res.z = y * sinA + z * cosA; break;
-                case 'YW': res.y = y * cosA - w * sinA; res.w = y * sinA + w * cosA; break;
-                case 'ZW': res.z = z * cosA - w * sinA; res.w = z * sinA + w * cosA; break;
-            }
-            return res;
-        }
-
-        // Project a 4D point to 3D space
-        function project4Dto3D(point4d, wOffset) {
-            let currentW = point4d.w + wOffset;
-            let factor = 1;
-            let denominator = PROJECTION_DISTANCE - currentW;
-            
-            if (Math.abs(denominator) > 0.001) {
-                factor = PROJECTION_DISTANCE / denominator;
-            } else {
-                factor = 1000; 
-            }
-
-            return new THREE.Vector3(
-                point4d.x * factor,
-                point4d.y * factor,
-                point4d.z * factor
-            );
-        }
-
-        // Utility to generate random pleasant colors
-        const palettes = [
-            0x6c5ce7, 0xa29bfe, // purples
-            0x0984e3, 0x74b9ff, // blues
-            0x00b894, 0x55efc4, // greens
-            0xfdccb6, 0xff7675, // warm
-            0xfdcb6e, 0xffeaa7  // yellows
-        ];
-        function getRandomColor() {
-            return palettes[Math.floor(Math.random() * palettes.length)];
-        }
-
-        // Base class for scene entities
-        class Entity {
-            constructor() {
-                // Drop from above
-                const startPos = new THREE.Vector3(
-                    (Math.random() - 0.5) * 6,
-                    Math.random() * 5 + 5,
-                    (Math.random() - 0.5) * 6
-                );
-                
-                this.mesh = null;
-                this.body = null;
-                this.startPos = startPos;
+        // Base class for simulated 4D objects
+        class Entity4D {
+            constructor(w_pos) {
+                this.w = w_pos;      // Position in 4th dimension
+                this.w_vel = 0;      // Velocity in 4th dimension
+                this.mass = 1;
+                this.inWorld = false; // Is it currently intersecting our 3D slice?
                 this.id = Math.random().toString(36).substring(7);
-            }
-            
-            initPhysics(shape, mass = 1) {
-                this.body = new CANNON.Body({
-                    mass: mass,
-                    position: new CANNON.Vec3(this.startPos.x, this.startPos.y, this.startPos.z),
-                    shape: shape,
-                    material: defaultMaterial
+                
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+                
+                // Set up Three.js material
+                this.material = new THREE.MeshStandardMaterial({
+                    color: this.color,
+                    roughness: 0.2,
+                    metalness: 0.1
                 });
                 
-                // Add some initial random rotation
+                // Will be defined by subclasses
+                this.mesh = null;
+                this.body = null;
+            }
+
+            initPhysics(startPos) {
+                // Attach Cannon Body properties
+                this.body.position.copy(startPos);
+                // Random 3D spin
                 this.body.angularVelocity.set(
-                    Math.random() * 2 - 1,
-                    Math.random() * 2 - 1,
+                    Math.random() * 2 - 1, 
+                    Math.random() * 2 - 1, 
                     Math.random() * 2 - 1
                 );
                 
-                world.addBody(this.body);
+                // Give it some initial W velocity so it moves through our space automatically
+                this.w_vel = (Math.random() - 0.5) * 4.0; 
             }
 
-            update() {
-                // Sync visual mesh with physics body
-                if (this.mesh && this.body) {
+            // Called every frame
+            update(dt, currentSliceW) {
+                // 1. Update W position based on W velocity
+                this.w += this.w_vel * dt;
+                
+                // Apply W-Gravity (pulls objects towards W=0 so they don't get lost forever)
+                if (wGravityEnabled) {
+                    this.w_vel -= this.w * 2.0 * dt; // Spring force towards origin
+                }
+                
+                // Apply W-friction
+                this.w_vel *= Math.pow(0.5, dt); // Damping
+
+                // 2. Calculate interaction with current 3D slice
+                const relativeW = this.w - currentSliceW;
+                
+                // Let subclasses process the geometry morphing based on W
+                this.processSlice(relativeW);
+
+                // 3. Sync Graphics to Physics if visible
+                if (this.inWorld && this.mesh && this.body) {
                     this.mesh.position.copy(this.body.position);
                     this.mesh.quaternion.copy(this.body.quaternion);
                 }
             }
+
+            setVisibility(visible) {
+                if (visible && !this.inWorld) {
+                    scene.add(this.mesh);
+                    world.addBody(this.body);
+                    this.inWorld = true;
+                } else if (!visible && this.inWorld) {
+                    scene.remove(this.mesh);
+                    world.removeBody(this.body);
+                    this.inWorld = false;
+                }
+            }
             
             destroy() {
-                if (this.mesh) {
-                    scene.remove(this.mesh);
-                    if (this.mesh.geometry) this.mesh.geometry.dispose();
-                    if (this.mesh.material) {
-                        if (Array.isArray(this.mesh.material)) {
-                            this.mesh.material.forEach(m => m.dispose());
-                        } else {
-                            this.mesh.material.dispose();
-                        }
-                    }
-                }
-                if (this.body) {
-                    world.removeBody(this.body);
-                }
+                this.setVisibility(false);
+                if (this.mesh && this.mesh.geometry) this.mesh.geometry.dispose();
+                if (this.material) this.material.dispose();
+            }
+
+            processSlice(relativeW) {
+                // Override in subclass
             }
         }
 
-        class Entity3D extends Entity {
-            constructor(type = 'cube') {
-                super();
-                
-                let geometry, shape;
-                const size = 1 + Math.random() * 0.5;
-                const color = getRandomColor();
-                
-                // Material that looks decent in light environment
-                const material = new THREE.MeshStandardMaterial({ 
-                    color: color,
-                    roughness: 0.4,
-                    metalness: 0.1
-                });
 
-                switch(type) {
-                    case 'cube':
-                        geometry = new THREE.BoxGeometry(size, size, size);
-                        shape = new CANNON.Box(new CANNON.Vec3(size/2, size/2, size/2));
-                        break;
-                    case 'sphere':
-                        geometry = new THREE.SphereGeometry(size/2, 32, 32);
-                        shape = new CANNON.Sphere(size/2);
-                        break;
-                    case 'cylinder':
-                        geometry = new THREE.CylinderGeometry(size/2, size/2, size, 32);
-                        shape = new CANNON.Cylinder(size/2, size/2, size, 16);
-                        // CannonJS cylinder is oriented along Z, ThreeJS along Y. Fix rotation.
-                        const q = new CANNON.Quaternion();
-                        q.setFromAxisAngle(new CANNON.Vec3(1,0,0), -Math.PI/2);
-                        // We'll apply this offset to the visual mesh instead in update
-                        this.isCylinder = true; 
-                        break;
-                    case 'cone':
-                        geometry = new THREE.ConeGeometry(size/2, size, 32);
-                        shape = new CANNON.Cylinder(0.01, size/2, size, 16); // Approximate with cylinder in Cannon
-                        this.isCylinder = true;
-                        break;
-                    case 'torus':
-                        geometry = new THREE.TorusGeometry(size/2, size/4, 16, 100);
-                        // Torus physics is complex, approximate with a sphere or box
-                        shape = new CANNON.Sphere(size * 0.7); 
-                        break;
-                    case 'tetra':
-                        geometry = new THREE.TetrahedronGeometry(size);
-                        shape = new CANNON.Sphere(size * 0.8); // Approximate
-                        break;
-                }
-
-                this.mesh = new THREE.Mesh(geometry, material);
+        // 1. Glome (4D Sphere)
+        // Its 3D cross-section is a 3D sphere that grows and shrinks.
+        // Equation: r_3d = sqrt(R_4d^2 - w^2)
+        class Glome extends Entity4D {
+            constructor(w_pos) {
+                super(w_pos);
+                this.R = 1.5; // 4D Radius
+                
+                // Three.js Geometry (Sphere)
+                this.mesh = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 32), this.material);
                 this.mesh.castShadow = true;
                 this.mesh.receiveShadow = true;
-                scene.add(this.mesh);
-                
-                this.initPhysics(shape);
-                
-                // Fix orientation for cylinders
-                if (this.isCylinder) {
-                    const quat = new CANNON.Quaternion();
-                    quat.setFromAxisAngle(new CANNON.Vec3(1,0,0), -Math.PI/2);
-                    const translation = new CANNON.Vec3(0,0,0);
-                    // Replace shape with transformed shape
-                    this.body.shapes = [];
-                    this.body.shapeOffsets = [];
-                    this.body.shapeOrientations = [];
-                    this.body.addShape(shape, translation, quat);
-                }
-            }
-        }
 
-        // Custom 4D Object Base
-        class Entity4D extends Entity {
-            constructor() {
-                super();
-                
-                const color = getRandomColor();
-                
-                // Create a parent group to handle the physical translation/rotation
-                this.mesh = new THREE.Group();
-                scene.add(this.mesh);
-                
-                // The actual geometry lines will be a child of the group
-                this.geometry = new THREE.BufferGeometry();
-                this.material = new THREE.LineBasicMaterial({ 
-                    color: color, 
-                    linewidth: 2,
-                    transparent: true,
-                    opacity: 0.9
+                // Cannon.js Physics (Sphere)
+                this.body = new CANNON.Body({
+                    mass: this.mass,
+                    material: physicsMaterial,
+                    shape: new CANNON.Sphere(1) // Initial arbitrary radius
                 });
                 
-                this.linesMesh = new THREE.LineSegments(this.geometry, this.material);
-                // Also add small spheres at vertices for nicer look
-                this.pointsMat = new THREE.PointsMaterial({color: color, size: 0.15, sizeAttenuation: true});
-                this.pointsMesh = new THREE.Points(this.geometry, this.pointsMat);
-                
-                this.mesh.add(this.linesMesh);
-                this.mesh.add(this.pointsMesh);
-
-                // Internal 4D rotation state
-                this.angles = { xw: 0, yw: 0, zw: 0, xy: 0 };
-                this.speedFactor = 0.5 + Math.random();
-                
-                // Physics - represent the bounds of the 4D object as a sphere
-                this.initPhysics(new CANNON.Sphere(1.2), 0.5); // Lighter mass for 4D objects
+                this.initPhysics(new CANNON.Vec3(0, 5, 0));
             }
-            
-            // Subclasses must implement processGeometry()
-            update() {
-                super.update(); // Updates mesh position based on physics
-                
-                // Only update internal 4D rotation if toggles are checked
-                if (rotXW.checked) this.angles.xw += 0.01 * this.speedFactor;
-                if (rotYW.checked) this.angles.yw += 0.012 * this.speedFactor;
-                if (rotZW.checked) this.angles.zw += 0.008 * this.speedFactor;
-                if (rotXY.checked) this.angles.xy += 0.015 * this.speedFactor;
 
-                this.processGeometry();
+            processSlice(relativeW) {
+                // Check if W intersection is within the 4D radius
+                if (Math.abs(relativeW) < this.R) {
+                    // Calculate the size of the 3D slice (Pythagorean theorem in 4D)
+                    const sliceRadius = Math.sqrt(this.R * this.R - relativeW * relativeW);
+                    
+                    // Prevent zero/negative scale issues
+                    const r = Math.max(0.05, sliceRadius);
+                    
+                    this.setVisibility(true);
+                    
+                    // Update visual size
+                    this.mesh.scale.set(r, r, r);
+                    
+                    // Update physical size dynamically
+                    // This creates the physical pushing effect as it grows!
+                    this.body.shapes[0].radius = r;
+                    this.body.shapes[0].updateBoundingSphereRadius();
+                } else {
+                    this.setVisibility(false);
+                }
             }
         }
 
-        // Tesseract Implementation
+        // 2. Hypercone
+        // A cone extending along the W axis.
+        // Cross-section is a 3D sphere that linearly grows, then vanishes.
+        class Hypercone extends Entity4D {
+            constructor(w_pos) {
+                super(w_pos);
+                this.baseR = 1.8;
+                this.h = 3.0; // Length in W axis
+                
+                this.mesh = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 32), this.material);
+                this.mesh.castShadow = true;
+                this.mesh.receiveShadow = true;
+
+                this.body = new CANNON.Body({
+                    mass: this.mass,
+                    material: physicsMaterial,
+                    shape: new CANNON.Sphere(1)
+                });
+                
+                this.initPhysics(new CANNON.Vec3(2, 5, 0));
+            }
+
+            processSlice(relativeW) {
+                // Assume cone tip is at +h/2, base is at -h/2
+                if (relativeW > -this.h/2 && relativeW < this.h/2) {
+                    // Linear interpolation of radius
+                    // At w = -h/2 (base), r = baseR. At w = h/2 (tip), r = 0.
+                    let normalizedDist = (relativeW - (-this.h/2)) / this.h; // 0 to 1
+                    let sliceRadius = this.baseR * (1.0 - normalizedDist);
+                    
+                    const r = Math.max(0.05, sliceRadius);
+                    
+                    this.setVisibility(true);
+                    this.mesh.scale.set(r, r, r);
+                    this.body.shapes[0].radius = r;
+                    this.body.shapes[0].updateBoundingSphereRadius();
+                } else {
+                    this.setVisibility(false);
+                }
+            }
+        }
+
+        // 3. Spherinder
+        // A 3D sphere extruded along the W axis. (Sphere x Line)
+        // Cross section is a constant-size 3D sphere, it just pops in and stays, then pops out.
+        class Spherinder extends Entity4D {
+            constructor(w_pos) {
+                super(w_pos);
+                this.R = 1.2;
+                this.wLength = 4.0;
+                
+                this.mesh = new THREE.Mesh(new THREE.SphereGeometry(this.R, 32, 32), this.material);
+                this.mesh.castShadow = true;
+                this.mesh.receiveShadow = true;
+
+                this.body = new CANNON.Body({
+                    mass: this.mass,
+                    material: physicsMaterial,
+                    shape: new CANNON.Sphere(this.R)
+                });
+                
+                this.initPhysics(new CANNON.Vec3(-2, 5, -2));
+            }
+
+            processSlice(relativeW) {
+                if (Math.abs(relativeW) < this.wLength / 2) {
+                    this.setVisibility(true);
+                    // Size is constant, no need to update scale/shape radius every frame
+                } else {
+                    this.setVisibility(false);
+                }
+            }
+        }
+
+        // 4. Axis-Aligned Tesseract (Hypercube)
+        // Cross section is a 3D box that appears, stays constant size, and vanishes.
         class Tesseract extends Entity4D {
-            constructor() {
-                super();
-                this.positions = new Float32Array(32 * 2 * 3);
-                this.geometry.setAttribute('position', new THREE.BufferAttribute(this.positions, 3));
+            constructor(w_pos) {
+                super(w_pos);
+                this.size = 2.0;
+                
+                this.mesh = new THREE.Mesh(new THREE.BoxGeometry(this.size, this.size, this.size), this.material);
+                this.mesh.castShadow = true;
+                this.mesh.receiveShadow = true;
+
+                this.body = new CANNON.Body({
+                    mass: this.mass,
+                    material: physicsMaterial,
+                    shape: new CANNON.Box(new CANNON.Vec3(this.size/2, this.size/2, this.size/2))
+                });
+                
+                this.initPhysics(new CANNON.Vec3(0, 5, 2));
             }
-            
-            processGeometry() {
-                let index = 0;
-                for (let i = 0; i < tesseractEdges.length; i++) {
-                    let p1_idx = tesseractEdges[i][0];
-                    let p2_idx = tesseractEdges[i][1];
 
-                    let p1 = tesseractVertices[p1_idx];
-                    let p2 = tesseractVertices[p2_idx];
-
-                    // Apply rotations
-                    p1 = rotate4D(p1, this.angles.xw, 'XW');
-                    p1 = rotate4D(p1, this.angles.yw, 'YW');
-                    p1 = rotate4D(p1, this.angles.zw, 'ZW');
-                    p1 = rotate4D(p1, this.angles.xy, 'XY');
-
-                    p2 = rotate4D(p2, this.angles.xw, 'XW');
-                    p2 = rotate4D(p2, this.angles.yw, 'YW');
-                    p2 = rotate4D(p2, this.angles.zw, 'ZW');
-                    p2 = rotate4D(p2, this.angles.xy, 'XY');
-
-                    // Project
-                    let proj1 = project4Dto3D(p1, globalWOffset);
-                    let proj2 = project4Dto3D(p2, globalWOffset);
-
-                    this.positions[index++] = proj1.x;
-                    this.positions[index++] = proj1.y;
-                    this.positions[index++] = proj1.z;
-
-                    this.positions[index++] = proj2.x;
-                    this.positions[index++] = proj2.y;
-                    this.positions[index++] = proj2.z;
+            processSlice(relativeW) {
+                // If the slice is within its W-bounds
+                if (Math.abs(relativeW) < this.size / 2) {
+                    this.setVisibility(true);
+                } else {
+                    this.setVisibility(false);
                 }
-                this.geometry.attributes.position.needsUpdate = true;
-            }
-        }
-        
-        // Glome (4D Sphere) approximation via lat/long grid mapped to 4D
-        class Glome extends Entity4D {
-            constructor() {
-                super();
-                // Generate vertices for a 3-sphere (surface of a 4-ball)
-                this.glomeVerts = [];
-                this.glomeEdges = [];
-                
-                const resU = 8;
-                const resV = 8;
-                const resW = 8;
-                
-                // Parametric generation of 3-sphere
-                for(let u=0; u<=resU; u++) {
-                    let theta = (u / resU) * Math.PI; // 0 to pi
-                    for(let v=0; v<=resV; v++) {
-                        let phi = (v / resV) * Math.PI; // 0 to pi
-                        for(let w=0; w<resW; w++) {
-                            let gamma = (w / resW) * Math.PI * 2; // 0 to 2pi
-                            
-                            // Hopf fibration coordinates
-                            let x = Math.sin(theta) * Math.sin(phi) * Math.cos(gamma);
-                            let y = Math.sin(theta) * Math.sin(phi) * Math.sin(gamma);
-                            let z = Math.sin(theta) * Math.cos(phi);
-                            let w_coord = Math.cos(theta);
-                            
-                            this.glomeVerts.push(new Point4D(x, y, z, w_coord));
-                        }
-                    }
-                }
-                
-                // Connect edges (simplified connectivity for wireframe)
-                let vCount = this.glomeVerts.length;
-                for(let i=0; i<vCount; i+=3) { // Skip some connections to keep it looking clean, not cluttered
-                    for(let j=i+1; j<vCount; j+=Math.floor(vCount/10)) {
-                         this.glomeEdges.push([i, j]);
-                    }
-                }
-                
-                // Allocate buffer
-                this.positions = new Float32Array(this.glomeEdges.length * 2 * 3);
-                this.geometry.setAttribute('position', new THREE.BufferAttribute(this.positions, 3));
-            }
-            
-            processGeometry() {
-                let index = 0;
-                // Pre-rotate all vertices to save computation
-                let rotatedVerts = [];
-                for(let i=0; i<this.glomeVerts.length; i++) {
-                    let p = this.glomeVerts[i];
-                    p = rotate4D(p, this.angles.xw, 'XW');
-                    p = rotate4D(p, this.angles.yw, 'YW');
-                    p = rotate4D(p, this.angles.zw, 'ZW');
-                    p = rotate4D(p, this.angles.xy, 'XY');
-                    rotatedVerts.push(p);
-                }
-                
-                for (let i = 0; i < this.glomeEdges.length; i++) {
-                    let p1 = rotatedVerts[this.glomeEdges[i][0]];
-                    let p2 = rotatedVerts[this.glomeEdges[i][1]];
-
-                    let proj1 = project4Dto3D(p1, globalWOffset);
-                    let proj2 = project4Dto3D(p2, globalWOffset);
-
-                    this.positions[index++] = proj1.x;
-                    this.positions[index++] = proj1.y;
-                    this.positions[index++] = proj1.z;
-                    this.positions[index++] = proj2.x;
-                    this.positions[index++] = proj2.y;
-                    this.positions[index++] = proj2.z;
-                }
-                this.geometry.attributes.position.needsUpdate = true;
             }
         }
 
-        document.getElementById('btn-spawn-tesseract').addEventListener('click', () => {
-            entities.push(new Tesseract());
-        });
-        
-        document.getElementById('btn-spawn-glome').addEventListener('click', () => {
-            entities.push(new Glome());
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        function updateMouseRay(e) {
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+        }
+
+        function getIntersectedEntity(e) {
+            updateMouseRay(e);
+            // Only check visible meshes
+            const visibleMeshes = entities.filter(ent => ent.inWorld).map(ent => ent.mesh);
+            const intersects = raycaster.intersectObjects(visibleMeshes);
+            
+            if (intersects.length > 0) {
+                return entities.find(ent => ent.mesh === intersects[0].object);
+            }
+            return null;
+        }
+
+        // Mouse Down: Grab
+        window.addEventListener('pointerdown', (e) => {
+            // Ignore UI clicks
+            if (e.target.closest('#side-panel') || e.target.closest('#toolbar') || e.target.closest('#instructions')) return;
+
+            const entity = getIntersectedEntity(e);
+            if (entity) {
+                draggedEntity = entity;
+                controls.enabled = false;
+                
+                // Wake physics body
+                draggedEntity.body.wakeUp();
+                
+                // Switch to kinematic for 1:1 mouse tracking
+                draggedEntity.body.type = CANNON.Body.KINEMATIC;
+                draggedEntity.body.velocity.set(0,0,0);
+                draggedEntity.body.angularVelocity.set(0,0,0);
+                
+                // Setup Drag Plane parallel to camera
+                dragPlane.setFromNormalAndCoplanarPoint(
+                    camera.getWorldDirection(dragPlane.normal),
+                    draggedEntity.mesh.position
+                );
+                
+                let intersectPoint = new THREE.Vector3();
+                raycaster.ray.intersectPlane(dragPlane, intersectPoint);
+                dragOffset.copy(intersectPoint).sub(draggedEntity.mesh.position);
+
+                // Visual highlight
+                draggedEntity.mesh.material.emissive.setHex(0x333333);
+                
+                lastMousePos.copy(draggedEntity.mesh.position);
+                mouseVelocity.set(0,0,0);
+            }
         });
 
-        document.getElementById('btn-spawn-cube').addEventListener('click', () => {
-            entities.push(new Entity3D('cube'));
+        // Mouse Move: Drag / Hover
+        window.addEventListener('pointermove', (e) => {
+            // Handle Dragging
+            if (draggedEntity) {
+                updateMouseRay(e);
+                let intersectPoint = new THREE.Vector3();
+                if (raycaster.ray.intersectPlane(dragPlane, intersectPoint)) {
+                    let newPos = intersectPoint.sub(dragOffset);
+                    
+                    // Keep above ground
+                    if (newPos.y < 0) newPos.y = 0;
+
+                    // Calculate velocity for tossing
+                    mouseVelocity.copy(newPos).sub(lastMousePos).multiplyScalar(60); // approx per second based on 60fps
+                    lastMousePos.copy(newPos);
+
+                    // Move physical body
+                    draggedEntity.body.position.copy(newPos);
+                }
+                return;
+            }
+
+            // Handle Hover styling
+            if (!e.target.closest('#side-panel') && !e.target.closest('#toolbar')) {
+                const entity = getIntersectedEntity(e);
+                if (entity !== hoveredEntity) {
+                    if (hoveredEntity && hoveredEntity.mesh && hoveredEntity !== draggedEntity) {
+                        hoveredEntity.mesh.material.emissive.setHex(0x000000);
+                    }
+                    hoveredEntity = entity;
+                    if (hoveredEntity) {
+                        hoveredEntity.mesh.material.emissive.setHex(0x111111);
+                        container.style.cursor = 'grab';
+                    } else {
+                        container.style.cursor = 'default';
+                    }
+                }
+            }
         });
-        document.getElementById('btn-spawn-sphere').addEventListener('click', () => {
-            entities.push(new Entity3D('sphere'));
+
+        // Mouse Up: Toss
+        window.addEventListener('pointerup', () => {
+            if (draggedEntity) {
+                controls.enabled = true;
+                
+                // Re-enable dynamic physics
+                draggedEntity.body.type = CANNON.Body.DYNAMIC;
+                
+                // Apply calculated toss velocity
+                // Clamp velocity to prevent physics explosions
+                const maxVel = 30;
+                mouseVelocity.clampLength(0, maxVel);
+                draggedEntity.body.velocity.copy(mouseVelocity);
+                
+                // Restore material
+                draggedEntity.mesh.material.emissive.setHex(0x000000);
+                
+                draggedEntity = null;
+            }
         });
-        document.getElementById('btn-spawn-cone').addEventListener('click', () => {
-            entities.push(new Entity3D('cone'));
+
+        // Mouse Wheel: Push along W-Axis
+        window.addEventListener('wheel', (e) => {
+            if (hoveredEntity) {
+                // Apply velocity directly to the W-axis of the hovered object
+                const force = e.deltaY * -0.02; 
+                hoveredEntity.w_vel += force;
+            } else if (draggedEntity) {
+                 const force = e.deltaY * -0.02; 
+                 draggedEntity.w_vel += force;
+            } else {
+                // If not hovering, zoom camera
+                return;
+            }
+            e.preventDefault();
+        }, { passive: false });
+
+        // Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
         });
-        document.getElementById('btn-spawn-cylinder').addEventListener('click', () => {
-            entities.push(new Entity3D('cylinder'));
+
+
+        // UI Listeners
+        wSlider.addEventListener('input', (e) => {
+            globalW = parseFloat(e.target.value);
+            wReadout.innerText = globalW.toFixed(2);
         });
-        document.getElementById('btn-spawn-torus').addEventListener('click', () => {
-            entities.push(new Entity3D('torus'));
+
+        document.getElementById('btn-glome').addEventListener('click', () => {
+            entities.push(new Glome(globalW));
         });
-        document.getElementById('btn-spawn-tetra').addEventListener('click', () => {
-            entities.push(new Entity3D('tetra'));
+        
+        document.getElementById('btn-hypercone').addEventListener('click', () => {
+            entities.push(new Hypercone(globalW));
+        });
+
+        document.getElementById('btn-tesseract').addEventListener('click', () => {
+            entities.push(new Tesseract(globalW));
+        });
+
+        document.getElementById('btn-spherinder').addEventListener('click', () => {
+            entities.push(new Spherinder(globalW));
         });
 
         document.getElementById('btn-clear').addEventListener('click', () => {
-            entities.forEach(ent => ent.destroy());
-            entities = [];
+            entities.forEach(e => e.destroy());
+            entities.length = 0; // clear array
         });
 
-        // Initialize with a few objects
-        entities.push(new Tesseract());
-        
-        // Slight delay for second object to avoid collision burst
-        setTimeout(() => {
-            entities.push(new Entity3D('cube'));
-        }, 500);
+        const btnWGrav = document.getElementById('btn-wgrav');
+        btnWGrav.addEventListener('click', () => {
+            wGravityEnabled = !wGravityEnabled;
+            btnWGrav.innerText = wGravityEnabled ? "ON" : "OFF";
+            btnWGrav.style.color = wGravityEnabled ? "var(--accent)" : "var(--text-muted)";
+            btnWGrav.style.borderColor = wGravityEnabled ? "var(--accent)" : "var(--border-color)";
+        });
 
+        // Initial setup
+        entities.push(new Glome(0));
+        setTimeout(() => entities.push(new Hypercone(2)), 500);
+
+        // Animation Loop
         const timeStep = 1 / 60;
         let lastCallTime;
 
         function animate() {
             requestAnimationFrame(animate);
 
-            // Step physics world
             const time = performance.now() / 1000;
             if (!lastCallTime) {
                 world.step(timeStep);
             } else {
                 const dt = time - lastCallTime;
-                world.step(timeStep, dt, 3);
+                // Cap dt to prevent massive simulation jumps on tab switch
+                world.step(timeStep, Math.min(dt, 0.1), 3); 
+                
+                // Update custom 4D logic
+                const customDt = Math.min(dt, 0.05);
+                for (let i = 0; i < entities.length; i++) {
+                    entities[i].update(customDt, globalW);
+                }
             }
             lastCallTime = time;
 
-            // Update all entities (syncs visual with physical, and processes 4D math)
-            for (let i = 0; i < entities.length; i++) {
-                entities[i].update();
-            }
-
-            controls.update(); 
+            controls.update();
             renderer.render(scene, camera);
         }
 
-        // Start loop
-        window.onload = function() {
-            animate();
-        };
+        window.onload = animate;
 
     </script>
 </body>
