@@ -3,792 +3,1058 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>4D Physics Sandbox</title>
+    <title>Cosmic Space Opera: Asteroid Assault</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- PointerLockControls -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
     <style>
-        :root {
-            --bg-color: #0a0a0a;
-            --panel-bg: #141414;
-            --border-color: #333333;
-            --text-main: #e0e0e0;
-            --text-muted: #888888;
-            --accent: #ff5500;
-            --accent-hover: #ff7733;
-        }
-
         body {
             margin: 0;
             overflow: hidden;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-family: 'Courier New', Courier, monospace; /* Utilitarian font */
-            font-size: 13px;
+            background-color: #000;
+            font-family: 'Courier New', Courier, monospace; /* More industrial/structured font */
             user-select: none;
         }
 
-        #canvas-container {
+        #game-container {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+        }
+
+        #ui-layer {
             position: absolute;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: 1;
-        }
-
-        /* Industrial UI Design */
-        #toolbar {
-            position: absolute;
-            bottom: 0;
-            left: 0;
             width: 100%;
-            background-color: var(--panel-bg);
-            border-top: 1px solid var(--border-color);
-            z-index: 10;
+            height: 100%;
+            pointer-events: none;
             display: flex;
-            align-items: center;
-            padding: 10px 20px;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
             box-sizing: border-box;
-            gap: 20px;
+            color: #00ffcc;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
         }
 
-        #side-panel {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background-color: var(--panel-bg);
-            border: 1px solid var(--border-color);
-            z-index: 10;
-            padding: 15px;
-            width: 250px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .panel-header {
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 5px;
-            margin-bottom: 5px;
-            color: var(--accent);
-        }
-
-        .control-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            width: 100%;
-        }
-
-        label {
-            color: var(--text-muted);
-            white-space: nowrap;
-        }
-
-        /* Technical Buttons */
-        button {
-            background-color: #222;
-            color: var(--text-main);
-            border: 1px solid var(--border-color);
-            padding: 8px 12px;
-            font-family: inherit;
-            font-size: 12px;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: all 0.1s linear;
-            flex: 1;
-        }
-
-        button:hover {
-            background-color: #333;
-            border-color: var(--accent);
-        }
-
-        button:active {
-            background-color: var(--accent);
-            color: #000;
-        }
-        
-        button.danger:hover {
-            border-color: #ff3333;
-            color: #ff3333;
-        }
-        button.danger:active {
-            background-color: #ff3333;
-            color: #000;
-        }
-
-        /* Flat Slider */
-        input[type=range] {
-            -webkit-appearance: none;
-            width: 100%;
-            background: transparent;
-            height: 20px;
-        }
-
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 16px;
-            width: 8px;
-            background: var(--accent);
-            cursor: ew-resize;
-            margin-top: -6px;
-        }
-
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 4px;
-            cursor: pointer;
-            background: #444;
-        }
-
-        input[type=range]:focus {
-            outline: none;
-        }
-
-        .readout {
-            background: #000;
-            border: 1px solid #333;
-            padding: 4px 8px;
-            color: #0f0;
-            min-width: 40px;
-            text-align: right;
-            font-weight: bold;
-        }
-
-        #instructions {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background-color: rgba(20, 20, 20, 0.8);
-            border: 1px solid var(--border-color);
-            padding: 15px;
-            z-index: 10;
-            max-width: 280px;
-            line-height: 1.5;
-            color: var(--text-muted);
-        }
-        
-        .highlight { color: var(--text-main); font-weight: bold; }
-
+        /* Crosshair */
         #crosshair {
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 4px;
-            height: 4px;
-            background-color: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
             transform: translate(-50%, -50%);
-            z-index: 5;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(0, 255, 204, 0.5);
+            border-radius: 50%;
             pointer-events: none;
         }
+        #crosshair::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 4px;
+            height: 4px;
+            background-color: #00ffcc;
+            border-radius: 50%;
+        }
+
+        /* Top Bar: Objectives & Stats */
+        #top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .hud-panel {
+            background: rgba(0, 20, 30, 0.6);
+            border: 1px solid #005544;
+            padding: 10px 15px;
+            border-radius: 4px;
+            backdrop-filter: blur(4px);
+        }
+
+        #objective-panel {
+            font-weight: bold;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Bottom Bar: Health, Ammo, Jetpack */
+        #bottom-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .status-bar-container {
+            width: 200px;
+            height: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #005544;
+            margin-top: 5px;
+            position: relative;
+        }
+
+        .status-bar-fill {
+            height: 100%;
+            transition: width 0.1s linear;
+        }
+
+        #health-fill { background-color: #ff3333; width: 100%; }
+        #jetpack-fill { background-color: #33ccff; width: 100%; }
+        #capture-fill { background-color: #ffaa00; width: 0%; }
+
+        /* Jetpack Malfunction Indicator */
+        #jetpack-warning {
+            color: #ff3333;
+            font-weight: bold;
+            display: none;
+            animation: blink 0.5s infinite;
+        }
+
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        /* Menus */
+        .menu-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 10, 15, 0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            pointer-events: auto;
+        }
+
+        .menu-title {
+            font-size: 3rem;
+            color: #00ffcc;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            text-align: center;
+            border-bottom: 2px solid #005544;
+            padding-bottom: 10px;
+        }
+
+        .menu-button {
+            background: transparent;
+            color: #00ffcc;
+            border: 2px solid #00ffcc;
+            padding: 15px 30px;
+            font-size: 1.5rem;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin: 10px;
+            text-transform: uppercase;
+        }
+
+        .menu-button:hover {
+            background: #00ffcc;
+            color: #000;
+        }
+
+        .instructions {
+            color: #aaa;
+            margin-top: 30px;
+            text-align: center;
+            line-height: 1.6;
+            max-width: 600px;
+        }
+        
+        .key-bind {
+            background: rgba(255,255,255,0.1);
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: #fff;
+        }
+
+        .hidden { display: none !important; }
+
+        /* Capture Zone Indicator */
+        #capture-status {
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        #capture-status.active {
+            opacity: 1;
+        }
+
+        /* Hit marker */
+        #hit-marker {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 30px;
+            height: 30px;
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.1s;
+        }
+        #hit-marker::before, #hit-marker::after {
+            content: '';
+            position: absolute;
+            background-color: white;
+        }
+        #hit-marker::before { top: 0; left: 14px; width: 2px; height: 30px; transform: rotate(45deg); }
+        #hit-marker::after { top: 14px; left: 0; width: 30px; height: 2px; transform: rotate(45deg); }
+        
+        #hit-marker.hit {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+
     </style>
-    <!-- Three.js and Cannon.js (Physics) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
 </head>
 <body>
 
-    <div id="side-panel">
-        <div class="panel-header">Spawn Entities</div>
-        
-        <div class="control-group">
-            <button id="btn-glome">Spawn Glome (4D Sphere)</button>
-            <button id="btn-hypercone">Spawn Hypercone</button>
-            <button id="btn-tesseract">Spawn Tesseract (4D Box)</button>
-            <button id="btn-spherinder">Spawn Spherinder</button>
-            <div style="height: 10px;"></div>
-            <button id="btn-clear" class="danger">Clear Scene</button>
-        </div>
-    </div>
-
-    <div id="toolbar">
-        <div class="row" style="flex: 1;">
-            <label for="w-slider">GLOBAL 3D SLICE (W-AXIS):</label>
-            <input type="range" id="w-slider" min="-10" max="10" step="0.01" value="0">
-            <div id="w-readout" class="readout">0.00</div>
-        </div>
-        <div class="row" style="width: auto;">
-            <label style="margin-right: 10px;">Gravity (W-Axis Focus):</label>
-            <button id="btn-wgrav" style="flex: 0; padding: 4px 8px; border-color: var(--accent); color: var(--accent);">ON</button>
-        </div>
-    </div>
-
-    <div id="instructions">
-        <div class="panel-header">Controls</div>
-        • <span class="highlight">Left Click + Drag:</span> Move objects in 3D space.<br>
-        • <span class="highlight">Scroll Wheel (Hover):</span> Push object along 4D W-axis.<br>
-        • <span class="highlight">Right Click + Drag:</span> Orbit camera.<br>
-        • <span class="highlight">Toss:</span> Fling objects to give them velocity.
-        <br><br>
-        <em>Note: You are seeing a 3D cross-section of 4D space. Objects grow, shrink, and vanish based on their intersection with our 3D slice.</em>
-    </div>
-
+    <div id="game-container"></div>
+    
     <div id="crosshair"></div>
-    <div id="canvas-container"></div>
+    <div id="hit-marker"></div>
+
+    <div id="ui-layer" class="hidden">
+        <div id="top-bar">
+            <div class="hud-panel" id="objective-panel">
+                MISSION: SECURE ASTEROID
+                <div style="font-size: 0.8rem; color: #888; margin-top: 5px;">ELIMINATE HOSTILES IN SECTOR</div>
+            </div>
+            <div class="hud-panel">
+                <div>SCORE: <span id="score-display">0</span></div>
+                <div>ENEMIES REMAINING: <span id="enemy-count-display">0</span></div>
+            </div>
+        </div>
+
+        <div id="capture-status" class="hud-panel">
+            CAPTURNG ASTEROID...
+            <div class="status-bar-container" style="width: 300px; margin: 10px auto 0;">
+                <div id="capture-fill" class="status-bar-fill"></div>
+            </div>
+        </div>
+
+        <div id="bottom-bar">
+            <div class="hud-panel">
+                <div>SUIT INTEGRITY</div>
+                <div class="status-bar-container">
+                    <div id="health-fill" class="status-bar-fill"></div>
+                </div>
+            </div>
+            <div class="hud-panel" style="text-align: right;">
+                <div>THRUSTER CAPACITY <span id="jetpack-warning">MALFUNCTION</span></div>
+                <div class="status-bar-container" style="float: right;">
+                    <div id="jetpack-fill" class="status-bar-fill"></div>
+                </div>
+                <div style="clear: both; padding-top: 5px;">WEAPON: BLASTER</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Menus -->
+    <div id="start-menu" class="menu-screen">
+        <div class="menu-title">VOID ASSAULT:<br>ASTEROID PRIME</div>
+        <button id="start-btn" class="menu-button">Deploy to Sector</button>
+        <div class="instructions">
+            <p><strong>OBJECTIVE:</strong> Eliminate the opposing team and capture the central resource asteroid.</p>
+            <p><strong>CONTROLS:</strong></p>
+            <p><span class="key-bind">W</span> <span class="key-bind">A</span> <span class="key-bind">S</span> <span class="key-bind">D</span> to Move | Mouse to Aim</p>
+            <p><span class="key-bind">Left Click</span> to Fire</p>
+            <p><span class="key-bind">Space</span> to use EVA Jetpack (Subject to malfunction in this atmosphere)</p>
+            <p>Stand on the central asteroid to capture it.</p>
+        </div>
+    </div>
+
+    <div id="game-over-menu" class="menu-screen hidden">
+        <div class="menu-title" id="game-over-title" style="color: #ff3333;">MISSION FAILED</div>
+        <div style="color: #fff; font-size: 1.5rem; margin-bottom: 20px;" id="game-over-stats">Score: 0</div>
+        <button id="restart-btn" class="menu-button">Redeploy</button>
+    </div>
 
     <script>
-        // Global State & Simulation Parameters
-        let globalW = 0.0;
-        let wGravityEnabled = true;
-        const entities = [];
-        
-        // Interaction State
-        let draggedEntity = null;
-        let dragPlane = new THREE.Plane();
-        let dragOffset = new THREE.Vector3();
-        let mouseVelocity = new THREE.Vector3();
-        let lastMousePos = new THREE.Vector3();
-        let isHovering = false;
-        let hoveredEntity = null;
+        // Configuration & State
+        const CONFIG = {
+            playerSpeed: 20.0,
+            jetpackThrust: 35.0,
+            jetpackMaxFuel: 100,
+            jetpackFuelRate: 20,
+            jetpackRechargeRate: 15,
+            jetpackMalfunctionChance: 0.05, // Chance per frame when thrusting
+            gravity: 25.0, // Low gravity environment
+            playerHeight: 2.5,
+            jumpVelocity: 12.0,
+            enemyCount: 5,
+            captureTimeTotal: 10, // Seconds to capture
+            asteroidRadius: 40,
+            worldRadius: 200,
+            laserSpeed: 150,
+            laserDamage: 25,
+            playerMaxHealth: 100
+        };
 
-        // DOM Elements
-        const container = document.getElementById('canvas-container');
-        const wSlider = document.getElementById('w-slider');
-        const wReadout = document.getElementById('w-readout');
+        const STATE = {
+            isPlaying: false,
+            health: CONFIG.playerMaxHealth,
+            jetpackFuel: CONFIG.jetpackMaxFuel,
+            jetpackMalfunctioning: false,
+            score: 0,
+            captureProgress: 0,
+            enemiesRemaining: 0,
+            isOnAsteroid: false,
+            velocity: new THREE.Vector3(),
+            direction: new THREE.Vector3(),
+            moveForward: false,
+            moveBackward: false,
+            moveLeft: false,
+            moveRight: false,
+            canJump: false,
+            isThrusting: false
+        };
 
-        // --- CORE ENGINES SETUP ---
+        // Three.js Core Variables
+        let camera, scene, renderer, controls;
+        let prevTime = performance.now();
+        let raycaster;
 
-        // 1. Three.js (Graphics)
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x0a0a0a);
-        scene.fog = new THREE.FogExp2(0x0a0a0a, 0.02);
+        // Game Objects Collections
+        const objects = []; // Collidable environment
+        const enemies = [];
+        const lasers = [];
+        const particles = [];
+        let captureZoneMesh;
 
-        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(12, 8, 12);
+        // UI Elements
+        const uiLayer = document.getElementById('ui-layer');
+        const startMenu = document.getElementById('start-menu');
+        const gameOverMenu = document.getElementById('game-over-menu');
+        const healthFill = document.getElementById('health-fill');
+        const jetpackFill = document.getElementById('jetpack-fill');
+        const jetpackWarning = document.getElementById('jetpack-warning');
+        const scoreDisplay = document.getElementById('score-display');
+        const enemyCountDisplay = document.getElementById('enemy-count-display');
+        const captureStatus = document.getElementById('capture-status');
+        const captureFill = document.getElementById('capture-fill');
+        const hitMarker = document.getElementById('hit-marker');
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        container.appendChild(renderer.domElement);
+        function init() {
+            // Setup Scene, Camera, Renderer
+            scene = new THREE.Scene();
+            // A more structured space background - less hazy vibe, more stark void
+            scene.background = new THREE.Color(0x020508); 
+            scene.fog = new THREE.FogExp2(0x020508, 0.002);
 
-        const controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
-        controls.maxPolarAngle = Math.PI / 2 + 0.1; // Allow slightly below ground
-
-        // 2. Cannon.js (Physics)
-        const world = new CANNON.World();
-        world.gravity.set(0, -9.81, 0); // Standard Y gravity
-        world.broadphase = new CANNON.NaiveBroadphase();
-        world.solver.iterations = 20; // High iterations for stability during shape morphing
-
-        const physicsMaterial = new CANNON.Material();
-        const contactMaterial = new CANNON.ContactMaterial(physicsMaterial, physicsMaterial, {
-            friction: 0.1,
-            restitution: 0.5 // Bouncy
-        });
-        world.addContactMaterial(contactMaterial);
-
-        // --- SCENE ENVIRONMENT ---
-
-        // Lighting (Harsh, studio style to read forms easily)
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
-        scene.add(ambientLight);
-
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
-        dirLight.position.set(15, 25, 10);
-        dirLight.castShadow = true;
-        dirLight.shadow.mapSize.width = 2048;
-        dirLight.shadow.mapSize.height = 2048;
-        dirLight.shadow.camera.near = 0.5;
-        dirLight.shadow.camera.far = 50;
-        dirLight.shadow.camera.left = -20;
-        dirLight.shadow.camera.right = 20;
-        dirLight.shadow.camera.top = 20;
-        dirLight.shadow.camera.bottom = -20;
-        scene.add(dirLight);
-
-        const rimLight = new THREE.DirectionalLight(0x4466ff, 0.5);
-        rimLight.position.set(-15, 5, -15);
-        scene.add(rimLight);
-
-        // The "3D Slice" Floor
-        // Note: The floor has infinite W-thickness, so it's always visible in our slice.
-        const gridHelper = new THREE.GridHelper(50, 50, 0x333333, 0x1a1a1a);
-        gridHelper.position.y = -0.01;
-        scene.add(gridHelper);
-
-        const floorGeo = new THREE.PlaneGeometry(50, 50);
-        const floorMat = new THREE.MeshStandardMaterial({ 
-            color: 0x050505, 
-            roughness: 0.8,
-            metalness: 0.2
-        });
-        const floorMesh = new THREE.Mesh(floorGeo, floorMat);
-        floorMesh.rotation.x = -Math.PI / 2;
-        floorMesh.receiveShadow = true;
-        scene.add(floorMesh);
-
-        const floorBody = new CANNON.Body({
-            mass: 0, // static
-            shape: new CANNON.Plane(),
-            material: physicsMaterial
-        });
-        floorBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
-        world.addBody(floorBody);
-
-        
-        // Color Palette for generated objects
-        const colors = [0xff4500, 0x00ccff, 0x33ff55, 0xffcc00, 0xcc33ff, 0xffffff];
-
-        // Base class for simulated 4D objects
-        class Entity4D {
-            constructor(w_pos) {
-                this.w = w_pos;      // Position in 4th dimension
-                this.w_vel = 0;      // Velocity in 4th dimension
-                this.mass = 1;
-                this.inWorld = false; // Is it currently intersecting our 3D slice?
-                this.id = Math.random().toString(36).substring(7);
-                
-                this.color = colors[Math.floor(Math.random() * colors.length)];
-                
-                // Set up Three.js material
-                this.material = new THREE.MeshStandardMaterial({
-                    color: this.color,
-                    roughness: 0.2,
-                    metalness: 0.1
-                });
-                
-                // Will be defined by subclasses
-                this.mesh = null;
-                this.body = null;
-            }
-
-            initPhysics(startPos) {
-                // Attach Cannon Body properties
-                this.body.position.copy(startPos);
-                // Random 3D spin
-                this.body.angularVelocity.set(
-                    Math.random() * 2 - 1, 
-                    Math.random() * 2 - 1, 
-                    Math.random() * 2 - 1
-                );
-                
-                // Give it some initial W velocity so it moves through our space automatically
-                this.w_vel = (Math.random() - 0.5) * 4.0; 
-            }
-
-            // Called every frame
-            update(dt, currentSliceW) {
-                // 1. Update W position based on W velocity
-                this.w += this.w_vel * dt;
-                
-                // Apply W-Gravity (pulls objects towards W=0 so they don't get lost forever)
-                if (wGravityEnabled) {
-                    this.w_vel -= this.w * 2.0 * dt; // Spring force towards origin
-                }
-                
-                // Apply W-friction
-                this.w_vel *= Math.pow(0.5, dt); // Damping
-
-                // 2. Calculate interaction with current 3D slice
-                const relativeW = this.w - currentSliceW;
-                
-                // Let subclasses process the geometry morphing based on W
-                this.processSlice(relativeW);
-
-                // 3. Sync Graphics to Physics if visible
-                if (this.inWorld && this.mesh && this.body) {
-                    this.mesh.position.copy(this.body.position);
-                    this.mesh.quaternion.copy(this.body.quaternion);
-                }
-            }
-
-            setVisibility(visible) {
-                if (visible && !this.inWorld) {
-                    scene.add(this.mesh);
-                    world.addBody(this.body);
-                    this.inWorld = true;
-                } else if (!visible && this.inWorld) {
-                    scene.remove(this.mesh);
-                    world.removeBody(this.body);
-                    this.inWorld = false;
-                }
-            }
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             
-            destroy() {
-                this.setVisibility(false);
-                if (this.mesh && this.mesh.geometry) this.mesh.geometry.dispose();
-                if (this.material) this.material.dispose();
-            }
-
-            processSlice(relativeW) {
-                // Override in subclass
-            }
-        }
-
-
-        // 1. Glome (4D Sphere)
-        // Its 3D cross-section is a 3D sphere that grows and shrinks.
-        // Equation: r_3d = sqrt(R_4d^2 - w^2)
-        class Glome extends Entity4D {
-            constructor(w_pos) {
-                super(w_pos);
-                this.R = 1.5; // 4D Radius
-                
-                // Three.js Geometry (Sphere)
-                this.mesh = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 32), this.material);
-                this.mesh.castShadow = true;
-                this.mesh.receiveShadow = true;
-
-                // Cannon.js Physics (Sphere)
-                this.body = new CANNON.Body({
-                    mass: this.mass,
-                    material: physicsMaterial,
-                    shape: new CANNON.Sphere(1) // Initial arbitrary radius
-                });
-                
-                this.initPhysics(new CANNON.Vec3(0, 5, 0));
-            }
-
-            processSlice(relativeW) {
-                // Check if W intersection is within the 4D radius
-                if (Math.abs(relativeW) < this.R) {
-                    // Calculate the size of the 3D slice (Pythagorean theorem in 4D)
-                    const sliceRadius = Math.sqrt(this.R * this.R - relativeW * relativeW);
-                    
-                    // Prevent zero/negative scale issues
-                    const r = Math.max(0.05, sliceRadius);
-                    
-                    this.setVisibility(true);
-                    
-                    // Update visual size
-                    this.mesh.scale.set(r, r, r);
-                    
-                    // Update physical size dynamically
-                    // This creates the physical pushing effect as it grows!
-                    this.body.shapes[0].radius = r;
-                    this.body.shapes[0].updateBoundingSphereRadius();
-                } else {
-                    this.setVisibility(false);
-                }
-            }
-        }
-
-        // 2. Hypercone
-        // A cone extending along the W axis.
-        // Cross-section is a 3D sphere that linearly grows, then vanishes.
-        class Hypercone extends Entity4D {
-            constructor(w_pos) {
-                super(w_pos);
-                this.baseR = 1.8;
-                this.h = 3.0; // Length in W axis
-                
-                this.mesh = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 32), this.material);
-                this.mesh.castShadow = true;
-                this.mesh.receiveShadow = true;
-
-                this.body = new CANNON.Body({
-                    mass: this.mass,
-                    material: physicsMaterial,
-                    shape: new CANNON.Sphere(1)
-                });
-                
-                this.initPhysics(new CANNON.Vec3(2, 5, 0));
-            }
-
-            processSlice(relativeW) {
-                // Assume cone tip is at +h/2, base is at -h/2
-                if (relativeW > -this.h/2 && relativeW < this.h/2) {
-                    // Linear interpolation of radius
-                    // At w = -h/2 (base), r = baseR. At w = h/2 (tip), r = 0.
-                    let normalizedDist = (relativeW - (-this.h/2)) / this.h; // 0 to 1
-                    let sliceRadius = this.baseR * (1.0 - normalizedDist);
-                    
-                    const r = Math.max(0.05, sliceRadius);
-                    
-                    this.setVisibility(true);
-                    this.mesh.scale.set(r, r, r);
-                    this.body.shapes[0].radius = r;
-                    this.body.shapes[0].updateBoundingSphereRadius();
-                } else {
-                    this.setVisibility(false);
-                }
-            }
-        }
-
-        // 3. Spherinder
-        // A 3D sphere extruded along the W axis. (Sphere x Line)
-        // Cross section is a constant-size 3D sphere, it just pops in and stays, then pops out.
-        class Spherinder extends Entity4D {
-            constructor(w_pos) {
-                super(w_pos);
-                this.R = 1.2;
-                this.wLength = 4.0;
-                
-                this.mesh = new THREE.Mesh(new THREE.SphereGeometry(this.R, 32, 32), this.material);
-                this.mesh.castShadow = true;
-                this.mesh.receiveShadow = true;
-
-                this.body = new CANNON.Body({
-                    mass: this.mass,
-                    material: physicsMaterial,
-                    shape: new CANNON.Sphere(this.R)
-                });
-                
-                this.initPhysics(new CANNON.Vec3(-2, 5, -2));
-            }
-
-            processSlice(relativeW) {
-                if (Math.abs(relativeW) < this.wLength / 2) {
-                    this.setVisibility(true);
-                    // Size is constant, no need to update scale/shape radius every frame
-                } else {
-                    this.setVisibility(false);
-                }
-            }
-        }
-
-        // 4. Axis-Aligned Tesseract (Hypercube)
-        // Cross section is a 3D box that appears, stays constant size, and vanishes.
-        class Tesseract extends Entity4D {
-            constructor(w_pos) {
-                super(w_pos);
-                this.size = 2.0;
-                
-                this.mesh = new THREE.Mesh(new THREE.BoxGeometry(this.size, this.size, this.size), this.material);
-                this.mesh.castShadow = true;
-                this.mesh.receiveShadow = true;
-
-                this.body = new CANNON.Body({
-                    mass: this.mass,
-                    material: physicsMaterial,
-                    shape: new CANNON.Box(new CANNON.Vec3(this.size/2, this.size/2, this.size/2))
-                });
-                
-                this.initPhysics(new CANNON.Vec3(0, 5, 2));
-            }
-
-            processSlice(relativeW) {
-                // If the slice is within its W-bounds
-                if (Math.abs(relativeW) < this.size / 2) {
-                    this.setVisibility(true);
-                } else {
-                    this.setVisibility(false);
-                }
-            }
-        }
-
-        const raycaster = new THREE.Raycaster();
-        const mouse = new THREE.Vector2();
-
-        function updateMouseRay(e) {
-            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-            raycaster.setFromCamera(mouse, camera);
-        }
-
-        function getIntersectedEntity(e) {
-            updateMouseRay(e);
-            // Only check visible meshes
-            const visibleMeshes = entities.filter(ent => ent.inWorld).map(ent => ent.mesh);
-            const intersects = raycaster.intersectObjects(visibleMeshes);
-            
-            if (intersects.length > 0) {
-                return entities.find(ent => ent.mesh === intersects[0].object);
-            }
-            return null;
-        }
-
-        // Mouse Down: Grab
-        window.addEventListener('pointerdown', (e) => {
-            // Ignore UI clicks
-            if (e.target.closest('#side-panel') || e.target.closest('#toolbar') || e.target.closest('#instructions')) return;
-
-            const entity = getIntersectedEntity(e);
-            if (entity) {
-                draggedEntity = entity;
-                controls.enabled = false;
-                
-                // Wake physics body
-                draggedEntity.body.wakeUp();
-                
-                // Switch to kinematic for 1:1 mouse tracking
-                draggedEntity.body.type = CANNON.Body.KINEMATIC;
-                draggedEntity.body.velocity.set(0,0,0);
-                draggedEntity.body.angularVelocity.set(0,0,0);
-                
-                // Setup Drag Plane parallel to camera
-                dragPlane.setFromNormalAndCoplanarPoint(
-                    camera.getWorldDirection(dragPlane.normal),
-                    draggedEntity.mesh.position
-                );
-                
-                let intersectPoint = new THREE.Vector3();
-                raycaster.ray.intersectPlane(dragPlane, intersectPoint);
-                dragOffset.copy(intersectPoint).sub(draggedEntity.mesh.position);
-
-                // Visual highlight
-                draggedEntity.mesh.material.emissive.setHex(0x333333);
-                
-                lastMousePos.copy(draggedEntity.mesh.position);
-                mouseVelocity.set(0,0,0);
-            }
-        });
-
-        // Mouse Move: Drag / Hover
-        window.addEventListener('pointermove', (e) => {
-            // Handle Dragging
-            if (draggedEntity) {
-                updateMouseRay(e);
-                let intersectPoint = new THREE.Vector3();
-                if (raycaster.ray.intersectPlane(dragPlane, intersectPoint)) {
-                    let newPos = intersectPoint.sub(dragOffset);
-                    
-                    // Keep above ground
-                    if (newPos.y < 0) newPos.y = 0;
-
-                    // Calculate velocity for tossing
-                    mouseVelocity.copy(newPos).sub(lastMousePos).multiplyScalar(60); // approx per second based on 60fps
-                    lastMousePos.copy(newPos);
-
-                    // Move physical body
-                    draggedEntity.body.position.copy(newPos);
-                }
-                return;
-            }
-
-            // Handle Hover styling
-            if (!e.target.closest('#side-panel') && !e.target.closest('#toolbar')) {
-                const entity = getIntersectedEntity(e);
-                if (entity !== hoveredEntity) {
-                    if (hoveredEntity && hoveredEntity.mesh && hoveredEntity !== draggedEntity) {
-                        hoveredEntity.mesh.material.emissive.setHex(0x000000);
-                    }
-                    hoveredEntity = entity;
-                    if (hoveredEntity) {
-                        hoveredEntity.mesh.material.emissive.setHex(0x111111);
-                        container.style.cursor = 'grab';
-                    } else {
-                        container.style.cursor = 'default';
-                    }
-                }
-            }
-        });
-
-        // Mouse Up: Toss
-        window.addEventListener('pointerup', () => {
-            if (draggedEntity) {
-                controls.enabled = true;
-                
-                // Re-enable dynamic physics
-                draggedEntity.body.type = CANNON.Body.DYNAMIC;
-                
-                // Apply calculated toss velocity
-                // Clamp velocity to prevent physics explosions
-                const maxVel = 30;
-                mouseVelocity.clampLength(0, maxVel);
-                draggedEntity.body.velocity.copy(mouseVelocity);
-                
-                // Restore material
-                draggedEntity.mesh.material.emissive.setHex(0x000000);
-                
-                draggedEntity = null;
-            }
-        });
-
-        // Mouse Wheel: Push along W-Axis
-        window.addEventListener('wheel', (e) => {
-            if (hoveredEntity) {
-                // Apply velocity directly to the W-axis of the hovered object
-                const force = e.deltaY * -0.02; 
-                hoveredEntity.w_vel += force;
-            } else if (draggedEntity) {
-                 const force = e.deltaY * -0.02; 
-                 draggedEntity.w_vel += force;
-            } else {
-                // If not hovering, zoom camera
-                return;
-            }
-            e.preventDefault();
-        }, { passive: false });
-
-        // Resize
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(window.innerWidth, window.innerHeight);
-        });
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.getElementById('game-container').appendChild(renderer.domElement);
 
+            // Controls (PointerLock)
+            controls = new THREE.PointerLockControls(camera, document.body);
 
-        // UI Listeners
-        wSlider.addEventListener('input', (e) => {
-            globalW = parseFloat(e.target.value);
-            wReadout.innerText = globalW.toFixed(2);
-        });
+            // Start menu button listener
+            document.getElementById('start-btn').addEventListener('click', () => {
+                controls.lock();
+            });
+            document.getElementById('restart-btn').addEventListener('click', () => {
+                resetGame();
+                controls.lock();
+            });
 
-        document.getElementById('btn-glome').addEventListener('click', () => {
-            entities.push(new Glome(globalW));
-        });
-        
-        document.getElementById('btn-hypercone').addEventListener('click', () => {
-            entities.push(new Hypercone(globalW));
-        });
+            controls.addEventListener('lock', function () {
+                startMenu.classList.add('hidden');
+                gameOverMenu.classList.add('hidden');
+                uiLayer.classList.remove('hidden');
+                if (!STATE.isPlaying) startGame();
+            });
 
-        document.getElementById('btn-tesseract').addEventListener('click', () => {
-            entities.push(new Tesseract(globalW));
-        });
+            controls.addEventListener('unlock', function () {
+                if (STATE.isPlaying) {
+                    // Pause equivalent could go here, for now just show start menu
+                    startMenu.classList.remove('hidden');
+                    uiLayer.classList.add('hidden');
+                }
+            });
 
-        document.getElementById('btn-spherinder').addEventListener('click', () => {
-            entities.push(new Spherinder(globalW));
-        });
+            scene.add(controls.getObject());
 
-        document.getElementById('btn-clear').addEventListener('click', () => {
-            entities.forEach(e => e.destroy());
-            entities.length = 0; // clear array
-        });
+            // Key Bindings
+            const onKeyDown = function (event) {
+                switch (event.code) {
+                    case 'ArrowUp':
+                    case 'KeyW': STATE.moveForward = true; break;
+                    case 'ArrowLeft':
+                    case 'KeyA': STATE.moveLeft = true; break;
+                    case 'ArrowDown':
+                    case 'KeyS': STATE.moveBackward = true; break;
+                    case 'ArrowRight':
+                    case 'KeyD': STATE.moveRight = true; break;
+                    case 'Space':
+                        if (STATE.canJump && !STATE.isThrusting) {
+                            STATE.velocity.y += CONFIG.jumpVelocity;
+                            STATE.canJump = false;
+                        } else {
+                            STATE.isThrusting = true;
+                        }
+                        break;
+                }
+            };
 
-        const btnWGrav = document.getElementById('btn-wgrav');
-        btnWGrav.addEventListener('click', () => {
-            wGravityEnabled = !wGravityEnabled;
-            btnWGrav.innerText = wGravityEnabled ? "ON" : "OFF";
-            btnWGrav.style.color = wGravityEnabled ? "var(--accent)" : "var(--text-muted)";
-            btnWGrav.style.borderColor = wGravityEnabled ? "var(--accent)" : "var(--border-color)";
-        });
+            const onKeyUp = function (event) {
+                switch (event.code) {
+                    case 'ArrowUp':
+                    case 'KeyW': STATE.moveForward = false; break;
+                    case 'ArrowLeft':
+                    case 'KeyA': STATE.moveLeft = false; break;
+                    case 'ArrowDown':
+                    case 'KeyS': STATE.moveBackward = false; break;
+                    case 'ArrowRight':
+                    case 'KeyD': STATE.moveRight = false; break;
+                    case 'Space': 
+                        STATE.isThrusting = false;
+                        STATE.jetpackMalfunctioning = false; // Reset malfunction on release
+                        break;
+                }
+            };
 
-        // Initial setup
-        entities.push(new Glome(0));
-        setTimeout(() => entities.push(new Hypercone(2)), 500);
+            document.addEventListener('keydown', onKeyDown);
+            document.addEventListener('keyup', onKeyUp);
+            document.addEventListener('mousedown', onMouseClick);
 
-        // Animation Loop
-        const timeStep = 1 / 60;
-        let lastCallTime;
+            raycaster = new THREE.Raycaster();
+
+            buildEnvironment();
+
+            // Window Resize
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function buildEnvironment() {
+            // Lighting - Stark, directional lighting to emphasize structure
+            const ambientLight = new THREE.AmbientLight(0x223344); // Dim blueish ambient
+            scene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+            dirLight.position.set(100, 200, 50);
+            dirLight.castShadow = true;
+            dirLight.shadow.camera.top = 200;
+            dirLight.shadow.camera.bottom = -200;
+            dirLight.shadow.camera.left = -200;
+            dirLight.shadow.camera.right = 200;
+            dirLight.shadow.camera.near = 0.1;
+            dirLight.shadow.camera.far = 500;
+            scene.add(dirLight);
+
+            const rimLight = new THREE.DirectionalLight(0x00aaff, 0.5); // Cool rim light
+            rimLight.position.set(-100, 50, -100);
+            scene.add(rimLight);
+
+            // 1. The Central Resource Asteroid (Structured, not soft/vibey)
+            const asteroidGeo = new THREE.IcosahedronGeometry(CONFIG.asteroidRadius, 2); // Angular geometry
+            
+            // Perturb vertices for rocky look but keep facets flat
+            const posAttribute = asteroidGeo.attributes.position;
+            const vertex = new THREE.Vector3();
+            for (let i = 0; i < posAttribute.count; i++) {
+                vertex.fromBufferAttribute(posAttribute, i);
+                vertex.normalize().multiplyScalar(CONFIG.asteroidRadius + (Math.random() * 5 - 2.5));
+                posAttribute.setXYZ(i, vertex.x, vertex.y, vertex.z);
+            }
+            asteroidGeo.computeVertexNormals();
+
+            const asteroidMat = new THREE.MeshStandardMaterial({ 
+                color: 0x444444, 
+                roughness: 0.9, 
+                metalness: 0.1,
+                flatShading: true // Essential for the structured, non-vibe look
+            });
+            const asteroid = new THREE.Mesh(asteroidGeo, asteroidMat);
+            asteroid.position.set(0, 0, 0);
+            asteroid.receiveShadow = true;
+            asteroid.castShadow = true;
+            scene.add(asteroid);
+            objects.push(asteroid);
+
+            // Capture Zone Indicator
+            const capGeo = new THREE.CylinderGeometry(CONFIG.asteroidRadius + 5, CONFIG.asteroidRadius + 5, 2, 32, 1, true);
+            const capMat = new THREE.MeshBasicMaterial({ 
+                color: 0xffaa00, 
+                transparent: true, 
+                opacity: 0.3,
+                side: THREE.DoubleSide,
+                wireframe: true // Industrial feel
+            });
+            captureZoneMesh = new THREE.Mesh(capGeo, capMat);
+            captureZoneMesh.position.copy(asteroid.position);
+            scene.add(captureZoneMesh);
+
+            // 2. Surrounding Debris/Platforms (Angular structures)
+            const materialDebris = new THREE.MeshStandardMaterial({ color: 0x334455, roughness: 0.7, flatShading: true });
+            
+            for (let i = 0; i < 30; i++) {
+                const isPlatform = Math.random() > 0.5;
+                let geo;
+                if (isPlatform) {
+                    geo = new THREE.BoxGeometry(
+                        Math.random() * 20 + 10, 
+                        Math.random() * 5 + 2, 
+                        Math.random() * 20 + 10
+                    );
+                } else {
+                    geo = new THREE.TetrahedronGeometry(Math.random() * 10 + 5, 0);
+                }
+
+                const mesh = new THREE.Mesh(geo, materialDebris);
+                
+                // Position randomly around, but outside central asteroid
+                const r = CONFIG.asteroidRadius + 20 + Math.random() * 100;
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                
+                mesh.position.set(
+                    r * Math.sin(phi) * Math.cos(theta),
+                    (r * Math.cos(phi)) * 0.5, // Flatten distribution slightly
+                    r * Math.sin(phi) * Math.sin(theta)
+                );
+                
+                mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                scene.add(mesh);
+                objects.push(mesh);
+            }
+
+            // 3. Starfield (Stark dots, no nebulas)
+            const starsGeo = new THREE.BufferGeometry();
+            const starsMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.5, sizeAttenuation: false });
+            const starsVerts = [];
+            for (let i = 0; i < 2000; i++) {
+                const x = (Math.random() - 0.5) * 1000;
+                const y = (Math.random() - 0.5) * 1000;
+                const z = (Math.random() - 0.5) * 1000;
+                // Exclude inner area
+                if (Math.sqrt(x*x + y*y + z*z) > 300) {
+                    starsVerts.push(x, y, z);
+                }
+            }
+            starsGeo.setAttribute('position', new THREE.Float32BufferAttribute(starsVerts, 3));
+            const stars = new THREE.Points(starsGeo, starsMat);
+            scene.add(stars);
+        }
+
+        class Enemy {
+            constructor() {
+                // Structured enemy design - robotic/drone like
+                this.geometry = new THREE.BoxGeometry(4, 4, 4);
+                this.material = new THREE.MeshStandardMaterial({ 
+                    color: 0xff3333, 
+                    roughness: 0.4, 
+                    metalness: 0.6,
+                    emissive: 0x330000 
+                });
+                this.mesh = new THREE.Mesh(this.geometry, this.material);
+                this.mesh.castShadow = true;
+                
+                // Add an "eye"
+                const eyeGeo = new THREE.PlaneGeometry(2, 1);
+                const eyeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+                const eye = new THREE.Mesh(eyeGeo, eyeMat);
+                eye.position.set(0, 1, 2.01);
+                this.mesh.add(eye);
+
+                this.health = 50;
+                this.speed = 8 + Math.random() * 5;
+                
+                this.respawn();
+                scene.add(this.mesh);
+                
+                this.nextFireTime = performance.now() + Math.random() * 3000;
+                this.mesh.userData = { isEnemy: true, entity: this };
+            }
+
+            respawn() {
+                const r = CONFIG.asteroidRadius + 50 + Math.random() * 50;
+                const theta = Math.random() * Math.PI * 2;
+                this.mesh.position.set(
+                    r * Math.cos(theta),
+                    Math.random() * 40 - 20,
+                    r * Math.sin(theta)
+                );
+                this.health = 50;
+                this.mesh.visible = true;
+                this.material.color.setHex(0xff3333);
+            }
+
+            update(delta, playerPos) {
+                if (!this.mesh.visible) return;
+
+                // Simple AI: Move towards player, avoid center asteroid
+                const dirToPlayer = new THREE.Vector3().subVectors(playerPos, this.mesh.position);
+                const distToPlayer = dirToPlayer.length();
+                dirToPlayer.normalize();
+
+                this.mesh.lookAt(playerPos);
+
+                // Hovering motion
+                this.mesh.position.y += Math.sin(performance.now() * 0.002) * 0.05;
+
+                // Movement logic
+                if (distToPlayer > 30) {
+                    this.mesh.position.addScaledVector(dirToPlayer, this.speed * delta);
+                }
+
+                // Firing logic
+                if (performance.now() > this.nextFireTime && distToPlayer < 150) {
+                    // Check line of sight
+                    raycaster.set(this.mesh.position, dirToPlayer);
+                    const intersects = raycaster.intersectObjects(objects);
+                    
+                    let canSeePlayer = true;
+                    if (intersects.length > 0 && intersects[0].distance < distToPlayer) {
+                        canSeePlayer = false; // Blocked by environment
+                    }
+
+                    if (canSeePlayer) {
+                        fireLaser(this.mesh.position, dirToPlayer, false);
+                        this.nextFireTime = performance.now() + 1500 + Math.random() * 2000;
+                    }
+                }
+            }
+
+            takeDamage(amount) {
+                this.health -= amount;
+                // Flash white
+                this.material.color.setHex(0xffffff);
+                setTimeout(() => {
+                    if (this.health > 0) this.material.color.setHex(0xff3333);
+                }, 100);
+
+                if (this.health <= 0) {
+                    this.die();
+                }
+            }
+
+            die() {
+                this.mesh.visible = false;
+                createExplosion(this.mesh.position, 0xff3333);
+                STATE.score += 100;
+                STATE.enemiesRemaining--;
+                updateUI();
+                
+                // Respawn logic for endless wave feel during capture
+                if (STATE.captureProgress < 100) {
+                    setTimeout(() => {
+                        if (STATE.isPlaying) {
+                            this.respawn();
+                            STATE.enemiesRemaining++;
+                            updateUI();
+                        }
+                    }, 3000);
+                }
+            }
+        }
+
+        class Laser {
+            constructor(startPos, direction, isPlayer) {
+                this.isPlayer = isPlayer;
+                this.geometry = new THREE.CylinderGeometry(0.2, 0.2, 4, 8);
+                this.geometry.rotateX(Math.PI / 2); // Align with Z axis for direction
+                
+                const color = isPlayer ? 0x00ffcc : 0xff3300;
+                this.material = new THREE.MeshBasicMaterial({ color: color });
+                this.mesh = new THREE.Mesh(this.geometry, this.material);
+                
+                this.mesh.position.copy(startPos);
+                // Offset slightly forward to avoid shooting self
+                this.mesh.position.addScaledVector(direction, 3); 
+                
+                // Align cylinder to direction
+                const target = startPos.clone().add(direction);
+                this.mesh.lookAt(target);
+                
+                this.velocity = direction.clone().multiplyScalar(CONFIG.laserSpeed);
+                this.life = 2.0; // Seconds
+                this.active = true;
+
+                scene.add(this.mesh);
+            }
+
+            update(delta) {
+                if (!this.active) return;
+                
+                this.life -= delta;
+                if (this.life <= 0) {
+                    this.destroy();
+                    return;
+                }
+
+                const moveVec = this.velocity.clone().multiplyScalar(delta);
+                
+                // Collision detection
+                raycaster.set(this.mesh.position, this.velocity.clone().normalize());
+                
+                // Check environment
+                const envIntersects = raycaster.intersectObjects(objects);
+                if (envIntersects.length > 0 && envIntersects[0].distance < moveVec.length()) {
+                    createSpark(envIntersects[0].point, this.material.color.getHex());
+                    this.destroy();
+                    return;
+                }
+
+                // Check entities
+                if (this.isPlayer) {
+                    const hitEnemy = enemies.find(e => e.mesh.visible && e.mesh.position.distanceTo(this.mesh.position) < 5);
+                    if (hitEnemy) {
+                        hitEnemy.takeDamage(CONFIG.laserDamage);
+                        showHitMarker();
+                        createSpark(this.mesh.position, this.material.color.getHex());
+                        this.destroy();
+                        return;
+                    }
+                } else {
+                    // Check player collision
+                    if (controls.getObject().position.distanceTo(this.mesh.position) < 3) {
+                        takePlayerDamage(15);
+                        this.destroy();
+                        return;
+                    }
+                }
+
+                this.mesh.position.add(moveVec);
+            }
+
+            destroy() {
+                this.active = false;
+                scene.remove(this.mesh);
+                // Free memory
+                this.geometry.dispose();
+                this.material.dispose();
+            }
+        }
+
+        function fireLaser(pos, dir, isPlayer) {
+            lasers.push(new Laser(pos, dir, isPlayer));
+            // Recoil/shake effect could go here
+        }
+
+        function onMouseClick(event) {
+            if (!STATE.isPlaying || !controls.isLocked) return;
+            if (event.button !== 0) return; // Left click only
+
+            // Get camera direction
+            const dir = new THREE.Vector3();
+            camera.getWorldDirection(dir);
+            fireLaser(controls.getObject().position, dir, true);
+        }
+
+        function showHitMarker() {
+            hitMarker.classList.add('hit');
+            setTimeout(() => hitMarker.classList.remove('hit'), 150);
+        }
+
+        function takePlayerDamage(amount) {
+            STATE.health -= amount;
+            // Screen flash red
+            const flash = document.createElement('div');
+            flash.style.position = 'absolute';
+            flash.style.top = '0';
+            flash.style.left = '0';
+            flash.style.width = '100%';
+            flash.style.height = '100%';
+            flash.style.backgroundColor = 'rgba(255, 0, 0, 0.3)';
+            flash.style.pointerEvents = 'none';
+            flash.style.zIndex = '5';
+            document.body.appendChild(flash);
+            
+            setTimeout(() => document.body.removeChild(flash), 100);
+
+            if (STATE.health <= 0) {
+                endGame(false);
+            }
+            updateUI();
+        }
+
+        class Particle {
+            constructor(pos, color, speed, life) {
+                this.mesh = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.5, 0.5, 0.5),
+                    new THREE.MeshBasicMaterial({ color: color })
+                );
+                this.mesh.position.copy(pos);
+                
+                // Random velocity outward
+                this.velocity = new THREE.Vector3(
+                    (Math.random() - 0.5) * speed,
+                    (Math.random() - 0.5) * speed,
+                    (Math.random() - 0.5) * speed
+                );
+                
+                this.life = life;
+                this.maxLife = life;
+                this.active = true;
+                scene.add(this.mesh);
+            }
+
+            update(delta) {
+                if (!this.active) return;
+                this.life -= delta;
+                if (this.life <= 0) {
+                    this.active = false;
+                    scene.remove(this.mesh);
+                    this.mesh.geometry.dispose();
+                    this.mesh.material.dispose();
+                    return;
+                }
+                this.mesh.position.addScaledVector(this.velocity, delta);
+                this.mesh.scale.setScalar(this.life / this.maxLife);
+                this.mesh.rotation.x += delta * 5;
+                this.mesh.rotation.y += delta * 5;
+            }
+        }
+
+        function createExplosion(pos, color) {
+            for(let i=0; i<20; i++) {
+                particles.push(new Particle(pos, color, 30, 1.0 + Math.random()));
+            }
+        }
+        function createSpark(pos, color) {
+             for(let i=0; i<5; i++) {
+                particles.push(new Particle(pos, color, 15, 0.2 + Math.random()*0.3));
+            }
+        }
+
+        function startGame() {
+            STATE.isPlaying = true;
+            STATE.health = CONFIG.playerMaxHealth;
+            STATE.score = 0;
+            STATE.captureProgress = 0;
+            STATE.jetpackFuel = CONFIG.jetpackMaxFuel;
+            STATE.jetpackMalfunctioning = false;
+            
+            // Reset Player pos
+            const startPos = new THREE.Vector3(0, CONFIG.asteroidRadius + 20, 100);
+            controls.getObject().position.copy(startPos);
+            STATE.velocity.set(0,0,0);
+
+            // Spawn Enemies
+            enemies.forEach(e => {
+                scene.remove(e.mesh);
+                e.geometry.dispose();
+                e.material.dispose();
+            });
+            enemies.length = 0;
+            STATE.enemiesRemaining = CONFIG.enemyCount;
+            for(let i = 0; i < CONFIG.enemyCount; i++) {
+                enemies.push(new Enemy());
+            }
+
+            updateUI();
+            prevTime = performance.now();
+            animate();
+        }
+
+        function resetGame() {
+            STATE.isPlaying = false;
+            captureStatus.classList.remove('active');
+            // Additional cleanup if needed before startGame is called via lock event
+        }
+
+        function endGame(victory) {
+            STATE.isPlaying = false;
+            controls.unlock();
+            uiLayer.classList.add('hidden');
+            gameOverMenu.classList.remove('hidden');
+            
+            const title = document.getElementById('game-over-title');
+            if (victory) {
+                title.textContent = "SECTOR SECURED";
+                title.style.color = "#00ffcc";
+            } else {
+                title.textContent = "MISSION FAILED";
+                title.style.color = "#ff3333";
+            }
+            
+            document.getElementById('game-over-stats').textContent = `Final Score: ${STATE.score}`;
+        }
+
+        function updateUI() {
+            healthFill.style.width = `${(STATE.health / CONFIG.playerMaxHealth) * 100}%`;
+            
+            const fuelPercent = (STATE.jetpackFuel / CONFIG.jetpackMaxFuel) * 100;
+            jetpackFill.style.width = `${fuelPercent}%`;
+            
+            if (fuelPercent < 20) jetpackFill.style.backgroundColor = '#ffaa00';
+            else jetpackFill.style.backgroundColor = '#33ccff';
+
+            jetpackWarning.style.display = STATE.jetpackMalfunctioning ? 'inline' : 'none';
+
+            scoreDisplay.textContent = STATE.score;
+            enemyCountDisplay.textContent = STATE.enemiesRemaining;
+
+            captureFill.style.width = `${STATE.captureProgress}%`;
+        }
+
+        function checkCaptureZone() {
+            const playerPos = controls.getObject().position;
+            // Central asteroid is at 0,0,0. Check distance to center.
+            const distToCenter = playerPos.length();
+            
+            // Check if close to asteroid surface (radius + tolerance)
+            if (distToCenter < CONFIG.asteroidRadius + 15) {
+                STATE.isOnAsteroid = true;
+                captureStatus.classList.add('active');
+            } else {
+                STATE.isOnAsteroid = false;
+                captureStatus.classList.remove('active');
+            }
+        }
 
         function animate() {
+            if (!STATE.isPlaying) return;
             requestAnimationFrame(animate);
 
-            const time = performance.now() / 1000;
-            if (!lastCallTime) {
-                world.step(timeStep);
-            } else {
-                const dt = time - lastCallTime;
-                // Cap dt to prevent massive simulation jumps on tab switch
-                world.step(timeStep, Math.min(dt, 0.1), 3); 
-                
-                // Update custom 4D logic
-                const customDt = Math.min(dt, 0.05);
-                for (let i = 0; i < entities.length; i++) {
-                    entities[i].update(customDt, globalW);
+            const time = performance.now();
+            const delta = (time - prevTime) / 1000;
+            
+            // Limit delta to prevent huge jumps if tab is inactive
+            const dt = Math.min(delta, 0.1); 
+
+            // --- Player Physics & Movement ---
+            STATE.velocity.x -= STATE.velocity.x * 5.0 * dt; // Friction
+            STATE.velocity.z -= STATE.velocity.z * 5.0 * dt;
+
+            // Jetpack Logic with Malfunction
+            let thrustingNow = false;
+            if (STATE.isThrusting && STATE.jetpackFuel > 0 && !STATE.jetpackMalfunctioning) {
+                // Random malfunction check
+                if (Math.random() < CONFIG.jetpackMalfunctionChance * dt) {
+                    STATE.jetpackMalfunctioning = true;
+                } else {
+                    thrustingNow = true;
+                    STATE.velocity.y += CONFIG.jetpackThrust * dt;
+                    STATE.jetpackFuel -= CONFIG.jetpackFuelRate * dt;
+                    // Exhaust particles
+                    createSpark(controls.getObject().position.clone().add(new THREE.Vector3(0,-2,0)), 0x33ccff);
                 }
             }
-            lastCallTime = time;
+            
+            // Recharge jetpack if not thrusting
+            if (!STATE.isThrusting) {
+                STATE.jetpackFuel = Math.min(CONFIG.jetpackMaxFuel, STATE.jetpackFuel + CONFIG.jetpackRechargeRate * dt);
+            }
 
-            controls.update();
+            // Gravity (pulls downwards globally)
+            STATE.velocity.y -= CONFIG.gravity * dt;
+
+            STATE.direction.z = Number(STATE.moveForward) - Number(STATE.moveBackward);
+            STATE.direction.x = Number(STATE.moveRight) - Number(STATE.moveLeft);
+            STATE.direction.normalize(); // consistent movement in all directions
+
+            if (STATE.moveForward || STATE.moveBackward) STATE.velocity.z -= STATE.direction.z * CONFIG.playerSpeed * dt;
+            if (STATE.moveLeft || STATE.moveRight) STATE.velocity.x -= STATE.direction.x * CONFIG.playerSpeed * dt;
+
+            // --- Collision Detection (Player vs Environment) ---
+            const currentPos = controls.getObject().position.clone();
+            
+            controls.moveRight(-STATE.velocity.x * dt);
+            controls.moveForward(-STATE.velocity.z * dt);
+            controls.getObject().position.y += (STATE.velocity.y * dt);
+
+            const newPos = controls.getObject().position;
+
+            // Simple spherical collision against asteroid
+            if (newPos.length() < CONFIG.asteroidRadius + CONFIG.playerHeight) {
+                // Push out along normal
+                const normal = newPos.clone().normalize();
+                newPos.copy(normal.multiplyScalar(CONFIG.asteroidRadius + CONFIG.playerHeight));
+                
+                // If moving downwards into asteroid, allow jump
+                if (STATE.velocity.y < 0) {
+                    STATE.velocity.y = 0;
+                    STATE.canJump = true;
+                }
+            } else {
+                 STATE.canJump = false; // In air
+            }
+            
+            // Very basic floor plane fallback to avoid falling forever
+            if (newPos.y < -200) {
+                STATE.velocity.y = 0;
+                newPos.y = -200;
+                takePlayerDamage(5); // Damage for falling into void
+            }
+
+            // --- Update Entities ---
+            enemies.forEach(e => e.update(dt, newPos));
+            
+            for (let i = lasers.length - 1; i >= 0; i--) {
+                lasers[i].update(dt);
+                if (!lasers[i].active) lasers.splice(i, 1);
+            }
+
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update(dt);
+                if (!particles[i].active) particles.splice(i, 1);
+            }
+
+            // --- Game Logic: Capture ---
+            checkCaptureZone();
+            if (STATE.isOnAsteroid) {
+                // Capture faster if fewer enemies
+                const captureRate = 100 / CONFIG.captureTimeTotal;
+                const penalty = (STATE.enemiesRemaining / CONFIG.enemyCount) * 0.5; // Up to 50% slower
+                STATE.captureProgress += (captureRate * (1 - penalty)) * dt;
+                
+                // Pulse capture zone mesh
+                captureZoneMesh.scale.setScalar(1 + Math.sin(time * 0.005) * 0.02);
+                
+                if (STATE.captureProgress >= 100) {
+                    STATE.captureProgress = 100;
+                    STATE.score += 5000;
+                    endGame(true);
+                }
+            } else if (STATE.captureProgress > 0) {
+                 // Decay progress if leave zone
+                 STATE.captureProgress -= 5 * dt; 
+                 if (STATE.captureProgress < 0) STATE.captureProgress = 0;
+            }
+
+            updateUI();
+
+            prevTime = time;
             renderer.render(scene, camera);
         }
 
-        window.onload = animate;
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // Init the game environment
+        init();
 
     </script>
 </body>
