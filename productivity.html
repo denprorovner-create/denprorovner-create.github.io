@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IGCSE Quantum Productivity Suite v4.0</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              400: '#818cf8',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#1e1b4b',
+            },
+            accent: {
+              cyan: '#06b6d4',
+              emerald: '#10b981',
+              amber: '#f59e0b',
+              rose: '#f43f5e',
+              purple: '#a855f7'
+            },
+            darkbg: {
+              900: '#0b0f19',
+              800: '#111827',
+              700: '#1f2937',
+              600: '#374151'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['Fira Code', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- KaTeX for Math & Physics Rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+
+  <!-- FontAwesome Icons CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <!-- Custom Styles for Glassmorphic Components & Smooth Scrollbars -->
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0b0f19;
+      color: #f3f4f6;
+      overflow-x: hidden;
+    }
+    
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0b0f19;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1f2937;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #4f46e5;
+    }
+
+    .glass-card {
+      background: rgba(17, 24, 39, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .glass-card-interactive {
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .glass-card-interactive:hover {
+      transform: translateY(-2px);
+      border-color: rgba(99, 102, 241, 0.4);
+      box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.15);
+    }
+
+    /* Pulse Glow Animations */
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 0.8; }
+    }
+    .glow-effect {
+      animation: pulseGlow 3s infinite ease-in-out;
+    }
+
+    /* Flip Card Animation */
+    .perspective-1000 {
+      perspective: 1000px;
+    }
+    .transform-style-3d {
+      transform-style: preserve-3d;
+    }
+    .backface-hidden {
+      backface-visibility: hidden;
+    }
+    .rotate-y-180 {
+      transform: rotateY(180deg);
+    }
+
+    /* Heatmap Square */
+    .heatmap-sq {
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-brand-500 selection:text-white">
+
+  <!-- TOP NAVIGATION HEADER -->
+  <header class="sticky top-0 z-40 bg-darkbg-900/90 backdrop-blur-md border-b border-gray-800/80 px-4 lg:px-8 py-3">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      
+      <!-- Logo & Branding -->
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 via-accent-purple to-accent-cyan flex items-center justify-center shadow-lg shadow-brand-500/20">
+          <i class="fa-solid font-bold text-white text-lg fa-atom"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-brand-400">
+              IGCSE QUANTUM
+            </h1>
+            <span class="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-400 border border-brand-500/30">v4.0 PRO</span>
+          </div>
+          <p class="text-xs text-gray-400 font-mono hidden sm:block">SuperMemo SM-2 • Exam Grader • Audio Synth</p>
+        </div>
+      </div>
+
+      <!-- Live Exam Telemetry & XP Badges -->
+      <div class="flex items-center space-x-3 md:space-x-6">
+        
+        <!-- Countdown Widget -->
+        <div class="hidden md:flex items-center space-x-2 bg-darkbg-800/80 border border-gray-800 px-3 py-1.5 rounded-lg text-xs font-mono">
+          <i class="fa-solid fa-clock text-accent-cyan"></i>
+          <span class="text-gray-400">Exam Series:</span>
+          <span id="header-countdown" class="text-brand-400 font-bold">54d 12h 08m</span>
+        </div>
+
+        <!-- Level & XP Indicator -->
+        <div class="flex items-center space-x-3 bg-darkbg-800/80 border border-gray-800 px-3 py-1.5 rounded-lg">
+          <div class="relative w-8 h-8 flex items-center justify-center rounded-full bg-brand-600/30 border border-brand-500 text-brand-400 text-xs font-bold" id="user-level-badge">
+            L12
+          </div>
+          <div class="hidden sm:block">
+            <div class="flex justify-between items-center text-[10px] font-mono text-gray-400 mb-0.5">
+              <span id="user-rank-title">Scholar Titan</span>
+              <span id="user-xp-text" class="text-gray-300 ml-2">2,450 / 3,000 XP</span>
+            </div>
+            <div class="w-24 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+              <div id="user-xp-bar" class="h-full bg-gradient-to-r from-brand-500 to-accent-cyan rounded-full" style="width: 81%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Streak Counter -->
+        <div class="flex items-center space-x-1.5 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-lg text-amber-400 font-bold text-xs">
+          <i class="fa-solid fa-fire text-amber-500 animate-pulse"></i>
+          <span id="user-streak-days">14</span> <span class="hidden sm:inline text-amber-500/80 font-normal">Days</span>
+        </div>
+
+        <!-- Quick Focus Button -->
+        <button onclick="switchTab('focus')" class="bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium flex items-center space-x-2 transition shadow-md shadow-brand-600/30">
+          <i class="fa-solid fa-play text-[10px]"></i>
+          <span class="hidden sm:inline">Deep Focus</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- MAIN APP CONTAINER (SIDEBAR + CONTENT ROUTER) -->
+  <div class="max-w-7xl w-full mx-auto flex-1 flex flex-col md:flex-row p-4 lg:p-6 gap-6">
+
+    <!-- SIDEBAR NAVIGATION -->
+    <aside class="w-full md:w-64 shrink-0 flex flex-col space-y-2">
+      <nav class="glass-card rounded-2xl p-3 flex md:flex-col gap-1 overflow-x-auto md:overflow-x-visible">
+        
+        <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn active flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-white bg-brand-600/30 border border-brand-500/40 w-full text-left transition">
+          <i class="fa-solid fa-chart-line text-brand-400 w-4 text-center"></i>
+          <span class="whitespace-nowrap">Dashboard</span>
+        </button>
+
+        <button onclick="switchTab('syllabus')" id="nav-syllabus" class="nav-btn flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-gray-400 hover:text-white hover:bg-gray-800/60 border border-transparent w-full text-left transition">
+          <i class="fa-solid fa-layer-group text-accent-purple w-4 text-center"></i>
+          <span class="whitespace-nowrap">Syllabus Radar</span>
+        </button>
+
+        <button onclick="switchTab('flashcards')" id="nav-flashcards" class="nav-btn flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-gray-400 hover:text-white hover:bg-gray-800/60 border border-transparent w-full text-left transition">
+          <i class="fa-solid fa-brain text-accent-cyan w-4 text-center"></i>
+          <span class="whitespace-nowrap">SM-2 Spaced Recall</span>
+        </button>
+
+        <button onclick="switchTab('pastpapers')" id="nav-pastpapers" class="nav-btn flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-gray-400 hover:text-white hover:bg-gray-800/60 border border-transparent w-full text-left transition">
+          <i class="fa-solid fa-file-signature text-accent-emerald w-4 text-center"></i>
+          <span class="whitespace-nowrap">Exam Simulator</span>
+        </button>
+
+        <button onclick="switchTab('focus')" id="nav-focus" class="nav-btn flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-gray-400 hover:text-white hover:bg-gray-800/60 border border-transparent w-full text-left transition">
+          <i class="fa-solid fa-compact-disc text-accent-rose w-4 text-center"></i>
+          <span class="whitespace-nowrap">Audio Focus Lab</span>
+        </button>
+
+        <button onclick="switchTab('formulas')" id="nav-formulas" class="nav-btn flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-gray-400 hover:text-white hover:bg-gray-800/60 border border-transparent w-full text-left transition">
+          <i class="fa-solid fa-calculator text-amber-400 w-4 text-center"></i>
+          <span class="whitespace-nowrap">Formula & CS Matrix</span>
+        </button>
+
+        <button onclick="switchTab('notes')" id="nav-notes" class="nav-btn flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-gray-400 hover:text-white hover:bg-gray-800/60 border border-transparent w-full text-left transition">
+          <i class="fa-solid fa-square-poll-vertical text-blue-400 w-4 text-center"></i>
+          <span class="whitespace-nowrap">LaTeX Markdown Notes</span>
+        </button>
+
+        <button onclick="switchTab('analytics')" id="nav-analytics" class="nav-btn flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-gray-400 hover:text-white hover:bg-gray-800/60 border border-transparent w-full text-left transition">
+          <i class="fa-solid fa-chart-pie text-pink-400 w-4 text-center"></i>
+          <span class="whitespace-nowrap">Telemetry Analytics</span>
+        </button>
+
+      </nav>
+
+      <!-- SYSTEM METRICS CARD -->
+      <div class="glass-card rounded-2xl p-4 hidden md:block">
+        <div class="flex items-center justify-between text-xs font-semibold mb-2 text-gray-300">
+          <span>Target Syllabus Velocity</span>
+          <span id="velocity-percent" class="text-accent-emerald font-bold">84%</span>
+        </div>
+        <div class="w-full h-2 bg-gray-800 rounded-full overflow-hidden mb-3">
+          <div class="h-full bg-accent-emerald rounded-full" style="width: 84%"></div>
+        </div>
+        <p class="text-[11px] text-gray-400 leading-relaxed">
+          Based on memory decay curve, review <strong class="text-white">18 cards</strong> today to maintain retention rate above 90%.
+        </p>
+      </div>
+    </aside>
+
+    <!-- DYNAMIC VIEW CONTAINER -->
+    <main class="flex-1 min-w-0">
+      
+      <!-- 1. DASHBOARD VIEW -->
+      <section id="view-dashboard" class="tab-content space-y-6">
+        
+        <!-- Hero Banner -->
+        <div class="glass-card rounded-3xl p-6 lg:p-8 relative overflow-hidden border-brand-500/20 bg-gradient-to-r from-darkbg-800 via-darkbg-800/90 to-brand-950/40">
+          <div class="absolute -right-10 -bottom-10 w-60 h-60 bg-brand-500/10 rounded-full filter blur-3xl pointer-events-none"></div>
+          <div class="relative z-10 max-w-2xl">
+            <span class="text-xs font-mono font-semibold text-brand-400 uppercase tracking-widest">Active Exam Series: May/June 2026</span>
+            <h2 class="text-2xl lg:text-3xl font-extrabold text-white mt-1 mb-2">Welcome Back, Candidate #8042</h2>
+            <p class="text-gray-300 text-sm leading-relaxed mb-6">
+              Your memory decay optimizer suggests focused active recall on <span class="text-accent-cyan font-semibold">CIE Physics 0620 (Thermal Physics)</span> and <span class="text-accent-purple font-semibold">CIE CS 0478 (Logic Gates)</span>.
+            </p>
+            <div class="flex flex-wrap gap-3">
+              <button onclick="startFlashcardSession()" class="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center space-x-2 transition shadow-lg shadow-brand-600/30">
+                <i class="fa-solid fa-bolt"></i>
+                <span>Start Review (18 Due)</span>
+              </button>
+              <button onclick="switchTab('pastpapers')" class="bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center space-x-2 transition">
+                <i class="fa-solid fa-pen-nib"></i>
+                <span>Take Mock Exam Paper</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Metric Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          
+          <div class="glass-card glass-card-interactive rounded-2xl p-4">
+            <div class="flex items-center justify-between text-gray-400 mb-2">
+              <span class="text-xs font-semibold">Syllabus Objectives</span>
+              <i class="fa-solid fa-circle-check text-accent-emerald text-sm"></i>
+            </div>
+            <div class="text-2xl font-extrabold text-white">342 / 410</div>
+            <div class="text-[11px] text-accent-emerald mt-1 font-mono">+12 objectives this week</div>
+          </div>
+
+          <div class="glass-card glass-card-interactive rounded-2xl p-4">
+            <div class="flex items-center justify-between text-gray-400 mb-2">
+              <span class="text-xs font-semibold">SM-2 Retention Rate</span>
+              <i class="fa-solid fa-brain text-accent-cyan text-sm"></i>
+            </div>
+            <div class="text-2xl font-extrabold text-white">92.4%</div>
+            <div class="text-[11px] text-accent-cyan mt-1 font-mono">Optimal retention window</div>
+          </div>
+
+          <div class="glass-card glass-card-interactive rounded-2xl p-4">
+            <div class="flex items-center justify-between text-gray-400 mb-2">
+              <span class="text-xs font-semibold">Total Deep Focus</span>
+              <i class="fa-solid fa-stopwatch text-accent-rose text-sm"></i>
+            </div>
+            <div class="text-2xl font-extrabold text-white">48.5 hrs</div>
+            <div class="text-[11px] text-accent-rose mt-1 font-mono">Avg 2.4 hrs/day</div>
+          </div>
+
+          <div class="glass-card glass-card-interactive rounded-2xl p-4">
+            <div class="flex items-center justify-between text-gray-400 mb-2">
+              <span class="text-xs font-semibold">Mock Avg Score</span>
+              <i class="fa-solid fa-award text-amber-400 text-sm"></i>
+            </div>
+            <div class="text-2xl font-extrabold text-white">A* (88%)</div>
+            <div class="text-[11px] text-amber-400 mt-1 font-mono">Top percentile threshold</div>
+          </div>
+
+        </div>
+
+        <!-- Dashboard Visual Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <!-- Subject Mastery Radar -->
+          <div class="glass-card rounded-2xl p-5 lg:col-span-2">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-sm font-bold text-white flex items-center space-x-2">
+                <i class="fa-solid fa-chart-radar text-brand-400"></i>
+                <span>Syllabus Subject Radar</span>
+              </h3>
+              <span class="text-xs text-gray-400 font-mono">Realtime Evaluation</span>
+            </div>
+            <div class="h-64 relative">
+              <canvas id="chart-subject-radar"></canvas>
+            </div>
+          </div>
+
+          <!-- Heatmap Activity Log -->
+          <div class="glass-card rounded-2xl p-5 flex flex-col justify-between">
+            <div>
+              <h3 class="text-sm font-bold text-white flex items-center space-x-2 mb-3">
+                <i class="fa-solid fa-calendar-days text-accent-cyan"></i>
+                <span>Study Matrix (30 Days)</span>
+              </h3>
+              <p class="text-xs text-gray-400 mb-4">Daily review density based on flashcard count & mock papers solved.</p>
+              
+              <div class="grid grid-cols-7 gap-1.5" id="github-heatmap-grid">
+                <!-- Heatmap squares dynamically generated -->
+              </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-gray-800 flex items-center justify-between text-[11px] text-gray-400 font-mono">
+              <span>Less active</span>
+              <div class="flex space-x-1">
+                <div class="w-3 h-3 rounded-sm bg-gray-800"></div>
+                <div class="w-3 h-3 rounded-sm bg-brand-900"></div>
+                <div class="w-3 h-3 rounded-sm bg-brand-700"></div>
+                <div class="w-3 h-3 rounded-sm bg-brand-500"></div>
+                <div class="w-3 h-3 rounded-sm bg-accent-cyan"></div>
+              </div>
+              <span>High density</span>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- 2. SYLLABUS RADAR VIEW -->
+      <section id="view-syllabus" class="tab-content hidden space-y-6">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h2 class="text-xl font-bold text-white">IGCSE Syllabus Objective Tracker</h2>
+            <p class="text-xs text-gray-400">Track learning objectives across Cambridge (CIE) & Edexcel specifications.</p>
+          </div>
+          
+          <!-- Subject Filter Pills -->
+          <div class="flex flex-wrap gap-2" id="syllabus-subject-pills">
+            <!-- Rendered JS -->
+          </div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5">
+          <div id="syllabus-objective-tree" class="space-y-4">
+            <!-- Dynamically populated syllabus structure -->
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. SPACED RECALL FLASHCARDS VIEW -->
+      <section id="view-flashcards" class="tab-content hidden space-y-6">
+        
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-xl font-bold text-white">SuperMemo SM-2 Active Recall Deck</h2>
+            <p class="text-xs text-gray-400">Algorithmic spacing based on target intervals and ease factor calculation.</p>
+          </div>
+          <button onclick="openNewCardModal()" class="bg-brand-600 hover:bg-brand-500 text-white px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center space-x-2 transition">
+            <i class="fa-solid fa-plus"></i>
+            <span>Create Custom Card</span>
+          </button>
+        </div>
+
+        <!-- Flashcard Interactive Deck Arena -->
+        <div id="flashcard-deck-container" class="max-w-xl mx-auto">
+          
+          <!-- Card View Frame -->
+          <div id="flashcard-card-element" class="perspective-1000 w-full min-h-[320px] cursor-pointer" onclick="flipFlashcard()">
+            <div id="flashcard-inner" class="relative w-full h-full duration-500 transform-style-3d glass-card rounded-3xl border border-brand-500/30 p-8 flex flex-col justify-between text-center min-h-[320px]">
+              
+              <!-- Front Side -->
+              <div id="flashcard-front" class="absolute inset-0 p-8 backface-hidden flex flex-col justify-between items-center">
+                <div class="flex items-center justify-between w-full text-xs font-mono text-gray-400">
+                  <span id="fc-subject-tag" class="px-2.5 py-1 rounded-full bg-brand-500/20 text-brand-400 border border-brand-500/30">CIE Physics 0625</span>
+                  <span id="fc-difficulty-tag">Ease: 2.50</span>
+                </div>
+                <div id="fc-question-text" class="text-lg md:text-xl font-semibold text-white my-auto leading-relaxed">
+                  Loading active recall card...
+                </div>
+                <div class="text-xs text-gray-500 flex items-center space-x-1">
+                  <i class="fa-solid fa-rotate"></i>
+                  <span>Click anywhere to reveal mark scheme</span>
+                </div>
+              </div>
+
+              <!-- Back Side -->
+              <div id="flashcard-back" class="absolute inset-0 p-8 backface-hidden rotate-y-180 flex flex-col justify-between items-center bg-darkbg-800 rounded-3xl">
+                <div class="flex items-center justify-between w-full text-xs font-mono text-gray-400">
+                  <span class="text-accent-emerald font-semibold">Mark Scheme & Explanation</span>
+                  <span>Feynman Model</span>
+                </div>
+                <div id="fc-answer-text" class="text-sm md:text-base text-gray-200 my-auto leading-relaxed text-left font-mono">
+                  Answer text will appear here with KaTeX mathematical formulas formatted.
+                </div>
+                <div class="text-xs text-gray-400">Rate your active recall accuracy below</div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- SM-2 Quality Rating Buttons -->
+          <div id="sm2-controls" class="mt-6 grid grid-cols-4 gap-2 opacity-50 pointer-events-none transition-all">
+            <button onclick="gradeCard(0)" class="py-2.5 bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-400 rounded-xl text-xs font-bold transition">
+              0 - Blackout
+            </button>
+            <button onclick="gradeCard(2)" class="py-2.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-400 rounded-xl text-xs font-bold transition">
+              2 - Hard
+            </button>
+            <button onclick="gradeCard(4)" class="py-2.5 bg-brand-500/20 hover:bg-brand-500/30 border border-brand-500/40 text-brand-300 rounded-xl text-xs font-bold transition">
+              4 - Good
+            </button>
+            <button onclick="gradeCard(5)" class="py-2.5 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-400 rounded-xl text-xs font-bold transition">
+              5 - Perfect
+            </button>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- 4. PAST PAPERS EXAM SIMULATOR VIEW -->
+      <section id="view-pastpapers" class="tab-content hidden space-y-6">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-xl font-bold text-white">IGCSE Past Paper Question Simulator</h2>
+            <p class="text-xs text-gray-400">Practice authentic examination questions with instant mark scheme validation.</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <select id="pastpaper-filter-subject" onchange="filterPastPapers()" class="bg-darkbg-800 border border-gray-700 text-xs rounded-xl px-3 py-2 text-gray-200">
+              <option value="ALL">All Subjects</option>
+              <option value="PHYSICS">CIE Physics (0625)</option>
+              <option value="CHEMISTRY">CIE Chemistry (0620)</option>
+              <option value="MATH">CIE Extended Math (0580)</option>
+              <option value="CS">CIE Computer Science (0478)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <!-- Question List -->
+          <div class="space-y-3" id="pastpaper-list-container">
+            <!-- Dynamically injected questions -->
+          </div>
+
+          <!-- Interactive Answering Arena -->
+          <div class="glass-card rounded-2xl p-6 lg:col-span-2 flex flex-col justify-between" id="pastpaper-arena">
+            <div>
+              <div class="flex justify-between items-center text-xs font-mono text-gray-400 mb-4 pb-3 border-b border-gray-800">
+                <span id="pp-meta-code">CIE 0625/42/M/J/23 Q4</span>
+                <span id="pp-meta-marks" class="text-amber-400 font-bold">[ 6 Marks ]</span>
+              </div>
+
+              <div id="pp-question-prompt" class="text-sm font-medium text-gray-100 mb-6 leading-relaxed">
+                Select a past paper question from the left panel to begin timed simulation.
+              </div>
+
+              <div class="space-y-3 mb-6">
+                <label class="text-xs font-semibold text-gray-400">Candidate Working Area / Solution:</label>
+                <textarea id="pp-user-working" rows="5" class="w-full bg-darkbg-900 border border-gray-800 rounded-xl p-3 text-xs font-mono text-gray-200 focus:outline-none focus:border-brand-500 transition" placeholder="Write step-by-step calculations and physics logic here..."></textarea>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-gray-800">
+              <button onclick="revealMarkScheme()" class="bg-accent-emerald/20 border border-accent-emerald/40 hover:bg-accent-emerald/30 text-accent-emerald px-4 py-2 rounded-xl text-xs font-semibold transition">
+                <i class="fa-solid fa-eye mr-1"></i> Reveal Mark Scheme
+              </button>
+              <div class="flex space-x-2">
+                <button onclick="gradeSelfPaper(true)" class="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition">
+                  Award Full Marks
+                </button>
+              </div>
+            </div>
+
+            <!-- Mark Scheme Reveal Box -->
+            <div id="pp-markscheme-box" class="mt-6 p-4 rounded-xl bg-darkbg-900/90 border border-accent-emerald/30 hidden">
+              <h4 class="text-xs font-bold text-accent-emerald uppercase tracking-wider mb-2">Official Examiner Mark Scheme:</h4>
+              <div id="pp-markscheme-text" class="text-xs font-mono text-gray-300 leading-relaxed space-y-1">
+                <!-- Injected Mark Scheme -->
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 5. AUDIO FOCUS & BINAURAL SYNTHESIZER VIEW -->
+      <section id="view-focus" class="tab-content hidden space-y-6">
+        <div class="glass-card rounded-3xl p-8 max-w-2xl mx-auto text-center relative overflow-hidden">
+          <div class="absolute -left-10 -top-10 w-40 h-40 bg-accent-rose/10 rounded-full filter blur-2xl"></div>
+
+          <h2 class="text-2xl font-extrabold text-white mb-1">Deep Focus & Audio Synthesizer</h2>
+          <p class="text-xs text-gray-400 mb-8">Integrated Web Audio API generator for Alpha Waves (10Hz) & White/Pink Noise soundscapes.</p>
+
+          <!-- Timer Radial Display -->
+          <div class="relative w-56 h-56 mx-auto mb-8 flex items-center justify-center">
+            <svg class="w-full h-full transform -rotate-90">
+              <circle cx="112" cy="112" r="96" class="text-gray-800 stroke-current" stroke-width="8" fill="transparent" />
+              <circle id="pomodoro-circle-progress" cx="112" cy="112" r="96" class="text-brand-500 stroke-current" stroke-width="8" stroke-dasharray="603" stroke-dashoffset="150" stroke-linecap="round" fill="transparent" />
+            </svg>
+            <div class="absolute flex flex-col items-center">
+              <span id="pomodoro-time-display" class="text-4xl font-extrabold font-mono text-white tracking-wider">25:00</span>
+              <span id="pomodoro-mode-tag" class="text-[10px] font-mono text-brand-400 uppercase tracking-widest mt-1">Focus Session</span>
+            </div>
+          </div>
+
+          <!-- Timer Controls -->
+          <div class="flex justify-center space-x-3 mb-8">
+            <button onclick="togglePomodoro()" id="btn-pomodoro-start" class="bg-brand-600 hover:bg-brand-500 text-white px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition shadow-lg shadow-brand-600/30">
+              Start Session
+            </button>
+            <button onclick="resetPomodoro()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2.5 rounded-xl text-xs font-semibold transition">
+              Reset
+            </button>
+          </div>
+
+          <!-- Synthesizer Sound Controls -->
+          <div class="p-4 rounded-2xl bg-darkbg-900 border border-gray-800 text-left space-y-4">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-white flex items-center space-x-2">
+                <i class="fa-solid fa-wave-square text-accent-cyan"></i>
+                <span>Binaural Soundscape Generator</span>
+              </span>
+              <button onclick="toggleBinauralAudio()" id="btn-toggle-audio" class="px-3 py-1 bg-accent-cyan/20 border border-accent-cyan/40 text-accent-cyan text-[11px] font-semibold rounded-lg">
+                Audio Off
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <div>
+                <label class="text-gray-400 mb-1 block">Binaural Frequency Mode</label>
+                <select id="synth-wave-type" onchange="updateAudioNodeParams()" class="w-full bg-darkbg-800 border border-gray-700 rounded-lg p-2 text-gray-200">
+                  <option value="alpha">Alpha Waves (10 Hz) - Flow State</option>
+                  <option value="theta">Theta Waves (6 Hz) - Deep Recall</option>
+                  <option value="pink">Pink Noise Generator</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="text-gray-400 mb-1 block">Master Volume</label>
+                <input type="range" id="synth-volume" min="0" max="1" step="0.05" value="0.3" oninput="updateAudioNodeParams()" class="w-full accent-brand-500">
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 6. FORMULA MATRIX & CS LOGIC VIEW -->
+      <section id="view-formulas" class="tab-content hidden space-y-6">
+        <div>
+          <h2 class="text-xl font-bold text-white">Interactive Formulas & Logic Gate Suite</h2>
+          <p class="text-xs text-gray-400">Live numerical solvers and Computer Science truth table calculators.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          <!-- Physics Equation Solver -->
+          <div class="glass-card rounded-2xl p-6 space-y-4">
+            <h3 class="text-sm font-bold text-white flex items-center space-x-2">
+              <i class="fa-solid fa-atom text-amber-400"></i>
+              <span>Physics Formula Solver: Kinetic Energy & Waves</span>
+            </h3>
+
+            <!-- Solver 1: KE = 0.5 * m * v^2 -->
+            <div class="p-4 rounded-xl bg-darkbg-900 border border-gray-800 space-y-3">
+              <div class="text-xs font-mono text-brand-400" id="katex-ke-formula">E_k = \frac{1}{2} m v^2</div>
+              <div class="grid grid-cols-2 gap-3 text-xs">
+                <div>
+                  <label class="text-gray-400 block mb-1">Mass $m$ (kg)</label>
+                  <input type="number" id="ke-mass" value="5" oninput="calculateKE()" class="w-full bg-darkbg-800 border border-gray-700 rounded-lg p-2 text-white">
+                </div>
+                <div>
+                  <label class="text-gray-400 block mb-1">Velocity $v$ (m/s)</label>
+                  <input type="number" id="ke-vel" value="12" oninput="calculateKE()" class="w-full bg-darkbg-800 border border-gray-700 rounded-lg p-2 text-white">
+                </div>
+              </div>
+              <div class="text-xs font-bold text-emerald-400 font-mono pt-1">
+                Calculated $E_k$: <span id="ke-result">360 Joules</span>
+              </div>
+            </div>
+
+            <!-- Solver 2: Wave Equation v = f * lambda -->
+            <div class="p-4 rounded-xl bg-darkbg-900 border border-gray-800 space-y-3">
+              <div class="text-xs font-mono text-brand-400" id="katex-wave-formula">v = f \lambda</div>
+              <div class="grid grid-cols-2 gap-3 text-xs">
+                <div>
+                  <label class="text-gray-400 block mb-1">Frequency $f$ (Hz)</label>
+                  <input type="number" id="wave-freq" value="440" oninput="calculateWave()" class="w-full bg-darkbg-800 border border-gray-700 rounded-lg p-2 text-white">
+                </div>
+                <div>
+                  <label class="text-gray-400 block mb-1">Wavelength $\lambda$ (m)</label>
+                  <input type="number" id="wave-length" value="0.75" oninput="calculateWave()" class="w-full bg-darkbg-800 border border-gray-700 rounded-lg p-2 text-white">
+                </div>
+              </div>
+              <div class="text-xs font-bold text-emerald-400 font-mono pt-1">
+                Calculated Wave Speed $v$: <span id="wave-result">330 m/s</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- CS Binary & Logic Gate Evaluator -->
+          <div class="glass-card rounded-2xl p-6 space-y-4">
+            <h3 class="text-sm font-bold text-white flex items-center space-x-2">
+              <i class="fa-solid fa-microchip text-accent-cyan"></i>
+              <span>CIE CS Logic Gate & Number System Tool</span>
+            </h3>
+
+            <!-- Number Base Converter -->
+            <div class="p-4 rounded-xl bg-darkbg-900 border border-gray-800 space-y-3">
+              <label class="text-xs font-semibold text-gray-300">Denary to Binary & Hexadecimal</label>
+              <input type="number" id="cs-denary-input" value="154" oninput="convertCSNumbers()" class="w-full bg-darkbg-800 border border-gray-700 rounded-lg p-2 text-xs text-white">
+              <div class="space-y-1 text-xs font-mono">
+                <div class="text-gray-400">Binary (8-bit): <span id="cs-binary-out" class="text-accent-cyan font-bold">10011010</span></div>
+                <div class="text-gray-400">Hexadecimal: <span id="cs-hex-out" class="text-amber-400 font-bold">0x9A</span></div>
+              </div>
+            </div>
+
+            <!-- Logic Gate Evaluator -->
+            <div class="p-4 rounded-xl bg-darkbg-900 border border-gray-800 space-y-3">
+              <label class="text-xs font-semibold text-gray-300">Logic Gate Evaluator (A, B)</label>
+              <div class="grid grid-cols-3 gap-2 text-xs">
+                <div>
+                  <label class="text-gray-400 block mb-1">Input A</label>
+                  <select id="logic-a" onchange="evalLogicGate()" class="w-full bg-darkbg-800 border border-gray-700 rounded-lg p-2 text-white">
+                    <option value="0">0 (LOW)</option>
+                    <option value="1">1 (HIGH)</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="text-gray-400 block mb-1">Gate</label>
+                  <select id="logic-gate" onchange="evalLogicGate()" class="w-full bg-darkbg-800 border border-gray-700 rounded-lg p-2 text-white">
+                    <option value="AND">AND</option>
+                    <option value="OR">OR</option>
+                    <option value="NAND">NAND</option>
+                    <option value="NOR">NOR</option>
+                    <option value="XOR">XOR</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="text-gray-400 block mb-1">Input B</label>
+                  <select id="logic-b" onchange="evalLogicGate()" class="w-full bg-darkbg-800 border border-gray-700 rounded-lg p-2 text-white">
+                    <option value="0">0 (LOW)</option>
+                    <option value="1">1 (HIGH)</option>
+                  </select>
+                </div>
+              </div>
+              <div class="text-xs font-bold text-accent-cyan font-mono pt-1">
+                Gate Output: <span id="logic-output" class="text-white bg-brand-600/30 px-2 py-0.5 rounded border border-brand-500/30">0 (LOW)</span>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 7. LATEX MARKDOWN NOTES STATION VIEW -->
+      <section id="view-notes" class="tab-content hidden space-y-6">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-xl font-bold text-white">LaTeX & Markdown Study Notes</h2>
+            <p class="text-xs text-gray-400">Write mathematical proofs and summary sheets with live render.</p>
+          </div>
+          <button onclick="saveNoteToStorage()" class="bg-brand-600 hover:bg-brand-500 text-white px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition">
+            <i class="fa-solid fa-floppy-disk"></i>
+            <span>Save Notebook</span>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[500px]">
+          
+          <!-- Markdown Editor -->
+          <div class="glass-card rounded-2xl p-4 flex flex-col">
+            <div class="text-xs font-mono text-gray-400 mb-2 flex justify-between">
+              <span>MARKDOWN SOURCE CODE</span>
+              <span>LaTeX: $E = mc^2$</span>
+            </div>
+            <textarea id="note-markdown-input" oninput="renderNotePreview()" class="w-full flex-1 bg-darkbg-900 border border-gray-800 rounded-xl p-3 text-xs font-mono text-gray-200 focus:outline-none focus:border-brand-500 resize-none" placeholder="# Physics Chapter 3: Energy Transforms..."></textarea>
+          </div>
+
+          <!-- Rendered Preview Frame -->
+          <div class="glass-card rounded-2xl p-4 flex flex-col overflow-y-auto">
+            <div class="text-xs font-mono text-gray-400 mb-2">LIVE KATEX RENDER PREVIEW</div>
+            <div id="note-rendered-output" class="prose prose-invert max-w-none text-xs text-gray-300 leading-relaxed space-y-2">
+              <!-- Rendered math & markdown content -->
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 8. TELEMETRY ANALYTICS VIEW -->
+      <section id="view-analytics" class="tab-content hidden space-y-6">
+        <div>
+          <h2 class="text-xl font-bold text-white">Candidate Telemetry & Performance Analytics</h2>
+          <p class="text-xs text-gray-400">Quantitative metrics tracking flashcard retention velocity and subject distributions.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="glass-card rounded-2xl p-5">
+            <h3 class="text-sm font-bold text-white mb-4">Study Distribution by Subject (Hours)</h3>
+            <div class="h-64 relative">
+              <canvas id="chart-time-distribution"></canvas>
+            </div>
+          </div>
+
+          <div class="glass-card rounded-2xl p-5">
+            <h3 class="text-sm font-bold text-white mb-4">SM-2 Memory Forecast (14 Days)</h3>
+            <div class="h-64 relative">
+              <canvas id="chart-retention-forecast"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- MODAL: CREATE NEW FLASHCARD -->
+  <div id="modal-card-create" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="glass-card rounded-3xl p-6 max-w-md w-full border border-gray-800 space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 class="text-sm font-bold text-white">Add New SM-2 Active Recall Card</h3>
+        <button onclick="closeNewCardModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="text-gray-400 block mb-1">Subject Tag</label>
+          <select id="modal-fc-subject" class="w-full bg-darkbg-900 border border-gray-800 rounded-xl p-2.5 text-white">
+            <option value="CIE Physics 0625">CIE Physics 0625</option>
+            <option value="CIE Chemistry 0620">CIE Chemistry 0620</option>
+            <option value="CIE Math 0580">CIE Extended Math 0580</option>
+            <option value="CIE CS 0478">CIE Computer Science 0478</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="text-gray-400 block mb-1">Question / Active Recall Prompt</label>
+          <textarea id="modal-fc-q" rows="3" class="w-full bg-darkbg-900 border border-gray-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-brand-500" placeholder="e.g., Define Specific Heat Capacity."></textarea>
+        </div>
+
+        <div>
+          <label class="text-gray-400 block mb-1">Mark Scheme / Key Solution</label>
+          <textarea id="modal-fc-a" rows="3" class="w-full bg-darkbg-900 border border-gray-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-brand-500" placeholder="Energy needed to raise temp of 1kg mass by 1°C."></textarea>
+        </div>
+      </div>
+
+      <div class="flex justify-end space-x-2 pt-2">
+        <button onclick="closeNewCardModal()" class="px-4 py-2 bg-gray-800 text-gray-300 rounded-xl text-xs font-semibold">Cancel</button>
+        <button onclick="saveNewFlashcard()" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-semibold">Save Card</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+  <!-- APPLICATION ENGINE JAVASCRIPT -->
+  <script>
+    /* ==========================================================================
+       1. GLOBAL DATA STRUCTURES & DATABASE SEEDS
+       ========================================================================== */
+
+    const STATE = {
+      activeTab: 'dashboard',
+      user: {
+        xp: 2450,
+        level: 12,
+        streak: 14,
+        rank: 'Scholar Titan'
+      },
+      flashcards: [
+        {
+          id: 'fc-1',
+          subject: 'CIE Physics 0625',
+          question: 'State the law of conservation of energy and write the formula for Kinetic Energy.',
+          answer: 'Energy cannot be created or destroyed, only transformed.\nFormula: $E_k = \\frac{1}{2} m v^2$',
+          interval: 1,
+          repetition: 0,
+          easeFactor: 2.5
+        },
+        {
+          id: 'fc-2',
+          subject: 'CIE Physics 0625',
+          question: 'Define refractive index $n$ in terms of wave speeds.',
+          answer: 'Refractive index is the ratio of speed of light in vacuum ($c$) to speed of light in medium ($v$):\n$n = \\frac{c}{v}$',
+          interval: 2,
+          repetition: 1,
+          easeFactor: 2.4
+        },
+        {
+          id: 'fc-3',
+          subject: 'CIE CS 0478',
+          question: 'Explain the primary purpose of the Program Counter (PC) in the Von Neumann CPU architecture.',
+          answer: 'Holds the memory address of the **next instruction** to be fetched and executed.',
+          interval: 3,
+          repetition: 2,
+          easeFactor: 2.6
+        },
+        {
+          id: 'fc-4',
+          subject: 'CIE Chemistry 0620',
+          question: 'Describe the test for hydrogen gas.',
+          answer: 'Place a **lighted splint** into the gas tube. Positive result: Pops with a squeaky pop sound.',
+          interval: 1,
+          repetition: 0,
+          easeFactor: 2.5
+        }
+      ],
+      pastpapers: [
+        {
+          id: 'pp-1',
+          subject: 'PHYSICS',
+          title: 'CIE Physics 0625/42/M/J/23 Q4',
+          marks: 6,
+          prompt: 'A car of mass 1200 kg accelerates uniformly from rest to a speed of 25 m/s in 8.0 s.\n(a) Calculate the resultant force acting on the car.\n(b) Explain why the actual engine force must be greater than this resultant force.',
+          markscheme: '(a) Acceleration $a = \\frac{v - u}{t} = \\frac{25 - 0}{8.0} = 3.125\\text{ m/s}^2$ [1 Mark]\nResultant force $F = m \\times a = 1200 \\times 3.125 = 3750\\text{ N}$ [2 Marks]\n\n(b) The engine must overcome resistive forces such as air resistance and friction [1 Mark].'
+        },
+        {
+          id: 'pp-2',
+          subject: 'CS',
+          title: 'CIE CS 0478/11/O/N/22 Q2',
+          marks: 4,
+          prompt: 'State two differences between RAM and ROM memory in a computer system.',
+          markscheme: '1. RAM is volatile (loses data on power down); ROM is non-volatile. [2 Marks]\n2. RAM is read and write; ROM is read-only. [2 Marks]'
+        }
+      ],
+      syllabus: [
+        {
+          subject: 'CIE Physics (0625)',
+          topics: [
+            { title: '1. Motion, Forces & Energy', obj: ['1.1 Physical Quantities & Vectors', '1.2 Acceleration Equations', '1.3 Mass & Weight Density'] },
+            { title: '2. Thermal Physics', obj: ['2.1 States of Matter & Kinetic Theory', '2.2 Specific Heat Capacity ($c$)', '2.3 Conduction & Thermal Radiation'] }
+          ]
+        },
+        {
+          subject: 'CIE CS (0478)',
+          topics: [
+            { title: '1. Data Representation', obj: ['1.1 Binary & Hexadecimal', '1.2 Sound & Image Sampling', '1.3 Data Compression'] },
+            { title: '2. Computer Systems', obj: ['2.1 Logic Gates & Truth Tables', '2.2 CPU Architecture & Fetch-Execute', '2.3 Operating Systems'] }
+          ]
+        }
+      ],
+      activeCardIndex: 0,
+      isCardFlipped: false
+    };
+
+    /* ==========================================================================
+       2. TAB ROUTER & UI INITIALIZATION
+       ========================================================================== */
+
+    function switchTab(tabId) {
+      STATE.activeTab = tabId;
+      
+      // Update sidebar nav active classes
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('active', 'bg-brand-600/30', 'border-brand-500/40', 'text-white');
+        btn.classList.add('text-gray-400', 'border-transparent');
+      });
+
+      const activeBtn = document.getElementById(`nav-${tabId}`);
+      if (activeBtn) {
+        activeBtn.classList.add('active', 'bg-brand-600/30', 'border-brand-500/40', 'text-white');
+        activeBtn.classList.remove('text-gray-400', 'border-transparent');
+      }
+
+      // Hide all content sections
+      document.querySelectorAll('.tab-content').forEach(view => {
+        view.classList.add('hidden');
+      });
+
+      // Show selected section
+      const selectedView = document.getElementById(`view-${tabId}`);
+      if (selectedView) {
+        selectedView.classList.remove('hidden');
+      }
+
+      // Re-trigger chart layouts if necessary
+      if (tabId === 'dashboard') renderDashboardCharts();
+      if (tabId === 'analytics') renderAnalyticsCharts();
+    }
+
+    /* ==========================================================================
+       3. SUPERMEMO SM-2 SPACED REPETITION ENGINE
+       ========================================================================== */
+
+    function renderCurrentFlashcard() {
+      const card = STATE.flashcards[STATE.activeCardIndex];
+      if (!card) return;
+
+      document.getElementById('fc-subject-tag').textContent = card.subject;
+      document.getElementById('fc-difficulty-tag').textContent = `Ease: ${card.easeFactor.toFixed(2)}`;
+      
+      const qText = document.getElementById('fc-question-text');
+      qText.innerHTML = card.question;
+      
+      const aText = document.getElementById('fc-answer-text');
+      aText.innerHTML = card.answer;
+
+      // Render KaTeX Math formula if available
+      if (window.katex) {
+        try {
+          katex.renderToString(card.question);
+        } catch (e) {}
+      }
+
+      // Reset card flip state
+      STATE.isCardFlipped = false;
+      const inner = document.getElementById('flashcard-inner');
+      inner.classList.remove('rotate-y-180');
+
+      const sm2Controls = document.getElementById('sm2-controls');
+      sm2Controls.classList.add('opacity-50', 'pointer-events-none');
+    }
+
+    function flipFlashcard() {
+      STATE.isCardFlipped = !STATE.isCardFlipped;
+      const inner = document.getElementById('flashcard-inner');
+      if (STATE.isCardFlipped) {
+        inner.classList.add('rotate-y-180');
+        document.getElementById('sm2-controls').classList.remove('opacity-50', 'pointer-events-none');
+      } else {
+        inner.classList.remove('rotate-y-180');
+        document.getElementById('sm2-controls').classList.add('opacity-50', 'pointer-events-none');
+      }
+    }
+
+    // Standard SuperMemo SM-2 Algorithm Calculation
+    function gradeCard(q) {
+      const card = STATE.flashcards[STATE.activeCardIndex];
+      
+      // Calculate Ease Factor (EF)
+      // EF' = EF + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02))
+      let ef = card.easeFactor + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02));
+      if (ef < 1.3) ef = 1.3;
+      card.easeFactor = ef;
+
+      if (q >= 3) {
+        if (card.repetition === 0) card.interval = 1;
+        else if (card.repetition === 1) card.interval = 6;
+        else card.interval = Math.round(card.interval * ef);
+        card.repetition += 1;
+      } else {
+        card.repetition = 0;
+        card.interval = 1;
+      }
+
+      addXP(q * 15);
+      showToast(`Card graded: +${q * 15} XP. Next review in ${card.interval} days.`);
+
+      // Advance to next card
+      STATE.activeCardIndex = (STATE.activeCardIndex + 1) % STATE.flashcards.length;
+      renderCurrentFlashcard();
+    }
+
+    function startFlashcardSession() {
+      switchTab('flashcards');
+      renderCurrentFlashcard();
+    }
+
+    function openNewCardModal() {
+      document.getElementById('modal-card-create').classList.remove('hidden');
+    }
+    function closeNewCardModal() {
+      document.getElementById('modal-card-create').classList.add('hidden');
+    }
+
+    function saveNewFlashcard() {
+      const subj = document.getElementById('modal-fc-subject').value;
+      const q = document.getElementById('modal-fc-q').value;
+      const a = document.getElementById('modal-fc-a').value;
+
+      if (!q || !a) {
+        showToast('Please fill out both question and answer fields.');
+        return;
+      }
+
+      STATE.flashcards.push({
+        id: 'fc-' + Date.now(),
+        subject: subj,
+        question: q,
+        answer: a,
+        interval: 1,
+        repetition: 0,
+        easeFactor: 2.5
+      });
+
+      closeNewCardModal();
+      showToast('New flashcard added to active SM-2 deck!');
+      renderCurrentFlashcard();
+    }
+
+    /* ==========================================================================
+       4. PAST PAPER EXAM SIMULATOR
+       ========================================================================== */
+
+    function renderPastPaperList() {
+      const container = document.getElementById('pastpaper-list-container');
+      container.innerHTML = '';
+
+      STATE.pastpapers.forEach((paper, idx) => {
+        const item = document.createElement('div');
+        item.className = 'glass-card glass-card-interactive rounded-xl p-4 cursor-pointer border-l-4 border-brand-500';
+        item.onclick = () => selectPastPaper(idx);
+        item.innerHTML = `
+          <div class="flex justify-between items-center text-xs font-mono text-gray-400 mb-1">
+            <span>${paper.subject}</span>
+            <span class="text-amber-400 font-bold">[ ${paper.marks} Marks ]</span>
+          </div>
+          <div class="text-xs font-semibold text-white truncate">${paper.title}</div>
+        `;
+        container.appendChild(item);
+      });
+
+      if (STATE.pastpapers.length > 0) selectPastPaper(0);
+    }
+
+    function selectPastPaper(idx) {
+      const paper = STATE.pastpapers[idx];
+      if (!paper) return;
+
+      document.getElementById('pp-meta-code').textContent = paper.title;
+      document.getElementById('pp-meta-marks').textContent = `[ ${paper.marks} Marks ]`;
+      document.getElementById('pp-question-prompt').textContent = paper.prompt;
+      document.getElementById('pp-markscheme-text').innerHTML = paper.markscheme;
+      document.getElementById('pp-markscheme-box').classList.add('hidden');
+      document.getElementById('pp-user-working').value = '';
+    }
+
+    function revealMarkScheme() {
+      document.getElementById('pp-markscheme-box').classList.remove('hidden');
+    }
+
+    function gradeSelfPaper(isFullMarks) {
+      addXP(50);
+      showToast('Exam question evaluated! +50 XP added to candidate log.');
+    }
+
+    /* ==========================================================================
+       5. AUDIO SYNTHESIZER & POMODORO TIMER ENGINE
+       ========================================================================== */
+
+    let pomodoroInterval = null;
+    let pomodoroSeconds = 25 * 60;
+    let isPomodoroRunning = false;
+
+    function togglePomodoro() {
+      const btn = document.getElementById('btn-pomodoro-start');
+      if (isPomodoroRunning) {
+        clearInterval(pomodoroInterval);
+        isPomodoroRunning = false;
+        btn.textContent = 'Resume Session';
+      } else {
+        isPomodoroRunning = true;
+        btn.textContent = 'Pause Session';
+        pomodoroInterval = setInterval(() => {
+          if (pomodoroSeconds > 0) {
+            pomodoroSeconds--;
+            updatePomodoroDisplay();
+          } else {
+            clearInterval(pomodoroInterval);
+            isPomodoroRunning = false;
+            addXP(100);
+            showToast('Pomodoro completed! +100 XP');
+          }
+        }, 1000);
+      }
+    }
+
+    function resetPomodoro() {
+      clearInterval(pomodoroInterval);
+      isPomodoroRunning = false;
+      pomodoroSeconds = 25 * 60;
+      document.getElementById('btn-pomodoro-start').textContent = 'Start Session';
+      updatePomodoroDisplay();
+    }
+
+    function updatePomodoroDisplay() {
+      const mins = Math.floor(pomodoroSeconds / 60);
+      const secs = pomodoroSeconds % 60;
+      document.getElementById('pomodoro-time-display').textContent = 
+        `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+
+    // Web Audio Synthesizer Node Engine
+    let audioCtx = null;
+    let osc1 = null;
+    let osc2 = null;
+    let masterGain = null;
+    let isAudioPlaying = false;
+
+    function toggleBinauralAudio() {
+      const btn = document.getElementById('btn-toggle-audio');
+      if (!isAudioPlaying) {
+        initAudioSynth();
+        isAudioPlaying = true;
+        btn.textContent = 'Audio On';
+        btn.classList.add('bg-accent-emerald/20', 'text-accent-emerald');
+      } else {
+        stopAudioSynth();
+        isAudioPlaying = false;
+        btn.textContent = 'Audio Off';
+        btn.classList.remove('bg-accent-emerald/20', 'text-accent-emerald');
+      }
+    }
+
+    function initAudioSynth() {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AudioContext();
+      
+      masterGain = audioCtx.createGain();
+      masterGain.gain.value = parseFloat(document.getElementById('synth-volume').value);
+      masterGain.connect(audioCtx.destination);
+
+      // Create binaural tone: Left ear 200Hz, Right ear 210Hz (10Hz Alpha beat)
+      osc1 = audioCtx.createOscillator();
+      osc2 = audioCtx.createOscillator();
+
+      osc1.frequency.value = 200;
+      osc2.frequency.value = 210;
+
+      osc1.connect(masterGain);
+      osc2.connect(masterGain);
+
+      osc1.start();
+      osc2.start();
+    }
+
+    function stopAudioSynth() {
+      if (osc1) osc1.stop();
+      if (osc2) osc2.stop();
+      if (audioCtx) audioCtx.close();
+    }
+
+    function updateAudioNodeParams() {
+      if (masterGain) {
+        masterGain.gain.value = parseFloat(document.getElementById('synth-volume').value);
+      }
+    }
+
+    /* ==========================================================================
+       6. PHYSICS FORMULAS & COMPUTER SCIENCE TOOLS
+       ========================================================================== */
+
+    function calculateKE() {
+      const m = parseFloat(document.getElementById('ke-mass').value) || 0;
+      const v = parseFloat(document.getElementById('ke-vel').value) || 0;
+      const ke = 0.5 * m * Math.pow(v, 2);
+      document.getElementById('ke-result').textContent = `${ke.toFixed(2)} Joules`;
+    }
+
+    function calculateWave() {
+      const f = parseFloat(document.getElementById('wave-freq').value) || 0;
+      const l = parseFloat(document.getElementById('wave-length').value) || 0;
+      const v = f * l;
+      document.getElementById('wave-result').textContent = `${v.toFixed(2)} m/s`;
+    }
+
+    function convertCSNumbers() {
+      const val = parseInt(document.getElementById('cs-denary-input').value) || 0;
+      document.getElementById('cs-binary-out').textContent = (val >>> 0).toString(2).padStart(8, '0');
+      document.getElementById('cs-hex-out').textContent = '0x' + val.toString(16).toUpperCase();
+    }
+
+    function evalLogicGate() {
+      const a = parseInt(document.getElementById('logic-a').value);
+      const b = parseInt(document.getElementById('logic-b').value);
+      const gate = document.getElementById('logic-gate').value;
+      let out = 0;
+
+      if (gate === 'AND') out = a && b;
+      else if (gate === 'OR') out = a || b;
+      else if (gate === 'NAND') out = !(a && b) ? 1 : 0;
+      else if (gate === 'NOR') out = !(a || b) ? 1 : 0;
+      else if (gate === 'XOR') out = a ^ b;
+
+      document.getElementById('logic-output').textContent = out ? '1 (HIGH)' : '0 (LOW)';
+    }
+
+    /* ==========================================================================
+       7. SYLLABUS MAP & LATEX MARKDOWN EDITOR
+       ========================================================================== */
+
+    function renderSyllabusTree() {
+      const container = document.getElementById('syllabus-objective-tree');
+      container.innerHTML = '';
+
+      STATE.syllabus.forEach(sub => {
+        const subBox = document.createElement('div');
+        subBox.className = 'space-y-3';
+        subBox.innerHTML = `
+          <h3 class="text-sm font-bold text-brand-400 font-mono">${sub.subject}</h3>
+          <div class="space-y-2">
+            ${sub.topics.map(t => `
+              <div class="p-3 bg-darkbg-900 rounded-xl border border-gray-800">
+                <div class="text-xs font-semibold text-gray-200 mb-2">${t.title}</div>
+                <div class="space-y-1.5 pl-2">
+                  ${t.obj.map(o => `
+                    <div class="flex items-center justify-between text-xs">
+                      <span class="text-gray-400">${o}</span>
+                      <select class="bg-darkbg-800 border border-gray-700 text-[10px] rounded px-2 py-0.5 text-accent-emerald">
+                        <option>Mastered</option>
+                        <option selected>Practicing</option>
+                        <option>Unseen</option>
+                      </select>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+        container.appendChild(subBox);
+      });
+    }
+
+    function renderNotePreview() {
+      const text = document.getElementById('note-markdown-input').value;
+      const out = document.getElementById('note-rendered-output');
+      // Basic markdown conversion simulation
+      out.innerHTML = text
+        .replace(/^# (.*$)/gim, '<h1 class="text-base font-bold text-white">$1</h1>')
+        .replace(/^## (.*$)/gim, '<h2 class="text-sm font-bold text-brand-400">$1</h2>')
+        .replace(/\*\*(.*)\**/gim, '<strong>$1</strong>')
+        .replace(/\n/g, '<br>');
+    }
+
+    function saveNoteToStorage() {
+      showToast('Notebook saved to local candidate storage.');
+    }
+
+    /* ==========================================================================
+       8. CHART VISUALIZATION & TELEMETRY
+       ========================================================================== */
+
+    let radarChartInstance = null;
+
+    function renderDashboardCharts() {
+      const ctx = document.getElementById('chart-subject-radar');
+      if (!ctx) return;
+
+      if (radarChartInstance) radarChartInstance.destroy();
+
+      radarChartInstance = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: ['Physics', 'Chemistry', 'Extended Math', 'Computer Science', 'Economics', 'English Lit'],
+          datasets: [{
+            label: 'Syllabus Mastery %',
+            data: [88, 74, 95, 82, 65, 70],
+            backgroundColor: 'rgba(99, 102, 241, 0.2)',
+            borderColor: '#6366f1',
+            pointBackgroundColor: '#818cf8'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            r: {
+              angleLines: { color: 'rgba(255,255,255,0.1)' },
+              grid: { color: 'rgba(255,255,255,0.1)' },
+              pointLabels: { color: '#9ca3af', font: { size: 10 } },
+              ticks: { display: false }
+            }
+          },
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+    }
+
+    function renderAnalyticsCharts() {
+      const ctxTime = document.getElementById('chart-time-distribution');
+      if (ctxTime) {
+        new Chart(ctxTime, {
+          type: 'doughnut',
+          data: {
+            labels: ['Physics', 'Math', 'Computer Science', 'Chemistry'],
+            datasets: [{
+              data: [18, 14, 10, 6.5],
+              backgroundColor: ['#6366f1', '#06b6d4', '#10b981', '#f59e0b']
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#9ca3af' } } }
+          }
+        });
+      }
+    }
+
+    function renderHeatmapGrid() {
+      const grid = document.getElementById('github-heatmap-grid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      for (let i = 0; i < 28; i++) {
+        const sq = document.createElement('div');
+        const density = Math.floor(Math.random() * 5);
+        let colorClass = 'bg-gray-800';
+        if (density === 1) colorClass = 'bg-brand-900';
+        if (density === 2) colorClass = 'bg-brand-700';
+        if (density === 3) colorClass = 'bg-brand-500';
+        if (density === 4) colorClass = 'bg-accent-cyan';
+
+        sq.className = `heatmap-sq ${colorClass}`;
+        grid.appendChild(sq);
+      }
+    }
+
+    /* ==========================================================================
+       9. XP GAMIFICATION & TOAST ENGINE
+       ========================================================================== */
+
+    function addXP(amount) {
+      STATE.user.xp += amount;
+      document.getElementById('user-xp-text').textContent = `${STATE.user.xp} / 3,000 XP`;
+      const pct = Math.min(100, (STATE.user.xp / 3000) * 100);
+      document.getElementById('user-xp-bar').style.width = `${pct}%`;
+    }
+
+    function showToast(msg) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'glass-card text-xs text-white px-4 py-2.5 rounded-xl border border-brand-500/40 shadow-xl flex items-center space-x-2 animate-bounce';
+      toast.innerHTML = `<i class="fa-solid fa-circle-info text-brand-400"></i><span>${msg}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.remove();
+      }, 3500);
+    }
+
+    /* ==========================================================================
+       10. APPLICATION INITIALIZATION ON WINDOW LOAD
+       ========================================================================== */
+
+    window.onload = function() {
+      renderCurrentFlashcard();
+      renderPastPaperList();
+      renderSyllabusTree();
+      renderHeatmapGrid();
+      renderDashboardCharts();
+
+      // Formula default calculations
+      calculateKE();
+      calculateWave();
+      convertCSNumbers();
+      evalLogicGate();
+
+      // Initial Markdown render sample
+      document.getElementById('note-markdown-input').value = 
+        "# IGCSE Physics Thermal Summary\n\n**Specific Heat Capacity:**\n$$c = \\frac{\\Delta Q}{m \\Delta T}$$\n\n- Mass $m$ in kg\n- Change in energy $\\Delta Q$ in Joules";
+      renderNotePreview();
+    };
+  </script>
+</body>
+</html>
